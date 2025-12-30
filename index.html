@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reservas</title>
+<style>
+body { font-family: Arial; padding:20px; }
+label { display:block; margin:4px 0; }
+</style>
+</head>
+<body>
+
+<h2>Nova Reserva</h2>
+
+<input type="date" id="data"><br><br>
+
+<div id="horarios">Selecione uma data</div><br>
+
+<input placeholder="Nome" id="nome"><br><br>
+<input placeholder="ID" id="id"><br><br>
+
+<button onclick="confirmar()">Confirmar</button>
+
+<script>
+const API = "COLE_AQUI_A_URL_DA_API";
+
+document.getElementById("data").addEventListener("change", carregar);
+
+function carregar() {
+  const data = data.value;
+  fetch(`${API}?action=horarios&data=${data}`)
+    .then(r=>r.json())
+    .then(hs=>{
+      horarios.innerHTML="";
+      hs.forEach(h=>{
+        horarios.innerHTML +=
+          `<label><input type="checkbox" value="${h}"> ${h}</label>`;
+      });
+    });
+}
+
+function confirmar() {
+  const hs = [...document.querySelectorAll("input[type=checkbox]:checked")]
+    .map(c=>c.value);
+
+  fetch(API, {
+    method:"POST",
+    body:JSON.stringify({
+      data:data.value,
+      horarios:hs,
+      nome:nome.value,
+      id:id.value
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    alert(res.sucesso ? "Reserva OK" : res.msg);
+  });
+}
+</script>
+
+</body>
+</html>
