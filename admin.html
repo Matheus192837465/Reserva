@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="p-4 bg-light">
+
+<h4>🛠️ Painel Admin</h4>
+
+<table class="table table-bordered">
+<thead>
+<tr>
+<th>Data</th><th>Hora</th><th>Nome</th><th>Ação</th>
+</tr>
+</thead>
+<tbody id="lista"></tbody>
+</table>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwCb3onquV3jG70a8ca1yDJrUCS2v50Tp8iCz7Lpju4f8NY72Na7i46Q3sWVNbNi4_5/exec";
+
+if(localStorage.getItem("tipo")!=="admin") location.href="login.html";
+
+fetch(`${API_URL}?action=listar`)
+.then(r=>r.json())
+.then(d=>{
+  d.forEach(l=>{
+    lista.innerHTML+=`
+      <tr>
+        <td>${l[1]}</td>
+        <td>${l[2]}</td>
+        <td>${l[3]}</td>
+        <td>
+          <button class="btn btn-danger btn-sm"
+          onclick="cancelar('${l[0]}')">Cancelar</button>
+        </td>
+      </tr>`;
+  });
+});
+
+function cancelar(ch){
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({action:"cancelar",chave:ch})
+  })
+  .then(()=>location.reload());
+}
+</script>
+
+</body>
+</html>
