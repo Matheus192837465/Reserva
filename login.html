@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reservas</title>
+<style>
+body { font-family: Arial; background:#f4f6f8; padding:40px; }
+.card { max-width:400px; margin:auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 10px #ccc; }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+
+<div class="card" id="login">
+<h3>Login</h3>
+<input id="usuario" placeholder="Usuário"><br><br>
+<input id="senha" type="password" placeholder="Senha"><br><br>
+<button onclick="logar()">Entrar</button>
+</div>
+
+<div class="card hidden" id="app">
+<h3>Nova Reserva</h3>
+<input type="date" id="data"><br><br>
+<div id="horarios"></div><br>
+<input id="nome" placeholder="Nome"><br><br>
+<input id="id" placeholder="ID"><br><br>
+<button onclick="reservar()">Confirmar</button>
+</div>
+
+<script>
+const API = "COLE_A_URL_DA_API";
+
+function logar() {
+  fetch(API,{method:"POST",body:JSON.stringify({
+    action:"login",
+    usuario:usuario.value,
+    senha:senha.value
+  })})
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.sucesso){
+      login.classList.add("hidden");
+      app.classList.remove("hidden");
+    } else alert("Login inválido");
+  });
+}
+
+data.onchange = ()=>{
+  fetch(`${API}?action=horarios&data=${data.value}`)
+  .then(r=>r.json())
+  .then(h=>{
+    horarios.innerHTML="";
+    h.forEach(x=>{
+      horarios.innerHTML+=`<label><input type="checkbox" value="${x}"> ${x}</label><br>`;
+    });
+  });
+};
+
+function reservar(){
+  const hs=[...document.querySelectorAll("input[type=checkbox]:checked")].map(c=>c.value);
+  fetch(API,{method:"POST",body:JSON.stringify({
+    action:"reservar",
+    data:data.value,
+    horarios:hs,
+    nome:nome.value,
+    id:id.value
+  })})
+  .then(r=>r.json())
+  .then(res=>alert(res.sucesso?"Reservado!":res.msg));
+}
+</script>
+
+</body>
+</html>
