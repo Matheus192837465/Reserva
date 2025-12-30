@@ -7,32 +7,23 @@ function login() {
 
   msg.innerText = "Entrando...";
 
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "login",
-      usuario: usuario,
-      senha: senha
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.sucesso) {
-      if (data.tipo === "admin") {
-        window.location.href = "admin.html";
-      } else {
-        window.location.href = "reservas.html";
-      }
-    } else {
-      msg.innerText = "Usuário ou senha inválidos";
-    }
-  })
-  .catch(() => {
-    msg.innerText = "Erro ao conectar ao servidor";
-  });
-}
+  const url = `${API_URL}?action=login&usuario=${encodeURIComponent(usuario)}&senha=${encodeURIComponent(senha)}`;
 
-function toggleSenha() {
-  const input = document.getElementById("senha");
-  input.type = input.type === "password" ? "text" : "password";
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (data.sucesso) {
+        if (data.tipo === "admin") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "reservas.html";
+        }
+      } else {
+        msg.innerText = "Usuário ou senha inválidos";
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      msg.innerText = "Erro ao conectar ao servidor";
+    });
 }
