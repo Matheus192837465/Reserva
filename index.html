@@ -33,7 +33,7 @@
 
 <nav class="navbar navbar-dark bg-primary">
   <div class="container-fluid">
-    <span class="navbar-brand">📅 Reservas</span>
+    <span class="navbar-brand">Reservas</span>
   </div>
 </nav>
 
@@ -88,7 +88,7 @@ function renderizarHome() {
 }
 
 function abrirDia(data) {
-  alert("Aqui vai abrir os horários do dia: " + data);
+  window.location.href = "dia.html?data=" + data;
 }
 
 renderizarHome();
