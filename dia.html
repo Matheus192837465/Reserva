@@ -50,6 +50,10 @@
 const params = new URLSearchParams(window.location.search);
 const data = params.get("data");
 
+function abrirDia(data) {
+  window.location.href = "horarios.html?data=" + data;
+}
+  
 if (!data) {
   document.getElementById("tituloDia").innerText =
     "⚠ Data não informada";
