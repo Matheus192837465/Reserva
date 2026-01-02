@@ -17,9 +17,14 @@
       background: #fff;
       border: 1px solid #dee2e6;
       cursor: pointer;
+      display: flex;
+      align-items: center;
     }
     .horario:hover {
       background: #e9ecef;
+    }
+    .horario input {
+      margin-right: 10px;
     }
   </style>
 </head>
@@ -46,15 +51,17 @@
 
       <div class="mb-3">
         <label class="form-label">Nome</label>
-        <input type="text" id="nome" class="form-control">
+        <input type="text" id="nome" class="form-control" required>
       </div>
 
       <div class="mb-3">
         <label class="form-label">ID</label>
-        <input type="text" id="id" class="form-control">
+        <input type="text" id="id" class="form-control" required>
       </div>
 
-      <button class="btn btn-primary w-100" onclick="confirmar()">Confirmar Reserva</button>
+      <button class="btn btn-primary w-100" onclick="confirmar()">
+        Confirmar Reserva
+      </button>
 
     </div>
   </div>
@@ -62,18 +69,29 @@
 </div>
 
 <script>
+/* ======================
+   CONFIG
+====================== */
+const API = "https://script.google.com/macros/s/AKfycbyfRPXOwc_5o3KjPDY6usuuKYW_dAINMLjnlYhGryzdBoDhOJh8lF3Nm8I-RUIwf9f6/exec";
+
+/* ======================
+   DATA (SEM FUSO)
+====================== */
 const params = new URLSearchParams(window.location.search);
 const dataISO = params.get("data");
 
 if (!dataISO) {
   alert("Data inválida");
+  window.location.href = "home.html";
 }
 
-const dataBR = dataISO.split("-").reverse().join("/");
+const partes = dataISO.split("-");
+const dataBR = `${partes[2]}/${partes[1]}/${partes[0]}`;
 document.getElementById("tituloData").innerText = "Data: " + dataBR;
 
-const API = "https://script.google.com/macros/s/AKfycbyfRPXOwc_5o3KjPDY6usuuKYW_dAINMLjnlYhGryzdBoDhOJh8lF3Nm8I-RUIwf9f6/exec"; // ← COLE A URL /exec
-
+/* ======================
+   HORÁRIOS
+====================== */
 function carregarHorarios() {
   fetch(`${API}?action=horarios&data=${dataISO}`)
     .then(r => r.json())
@@ -88,11 +106,11 @@ function carregarHorarios() {
 
       horarios.forEach(h => {
         const label = document.createElement("label");
-        label.className = "horario d-block mb-2";
+        label.className = "horario mb-2";
 
         label.innerHTML = `
           <input type="checkbox" value="${h}">
-          <span class="ms-2">${h}</span>
+          <span>${h}</span>
         `;
 
         div.appendChild(label);
@@ -104,6 +122,9 @@ function carregarHorarios() {
     });
 }
 
+/* ======================
+   CONFIRMAR
+====================== */
 function confirmar() {
   const selecionados = [...document.querySelectorAll("#horarios input:checked")]
     .map(cb => cb.value);
@@ -128,7 +149,7 @@ function confirmar() {
   .then(r => r.json())
   .then(res => {
     if (res.sucesso) {
-      alert("Reserva realizada");
+      alert("Reserva realizada com sucesso");
       window.location.href = "home.html";
     } else {
       alert(res.msg || "Erro");
