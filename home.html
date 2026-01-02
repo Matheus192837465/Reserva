@@ -3,41 +3,157 @@
 <head>
   <meta charset="UTF-8">
   <title>Home | Reservas</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f4f6f9;
+    }
+
+    .dia-card {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .dia-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .dia-card.active {
+      border: 2px solid #0d6efd;
+      background: #e7f1ff;
+    }
+
+    .horario-btn {
+      margin: 4px;
+      min-width: 90px;
+    }
+  </style>
 </head>
-<body class="bg-light">
+<body>
 
 <nav class="navbar navbar-dark bg-primary">
   <div class="container-fluid">
-    <span class="navbar-brand">Reservas</span>
+    <span class="navbar-brand">Sistema de Reservas</span>
     <button class="btn btn-light btn-sm" onclick="logout()">Sair</button>
   </div>
 </nav>
 
 <div class="container mt-4">
-  <h4 class="mb-3">Escolha o dia</h4>
 
-  <div class="list-group">
-    <a class="list-group-item list-group-item-action">Segunda</a>
-    <a class="list-group-item list-group-item-action">Terça</a>
-    <a class="list-group-item list-group-item-action">Quarta</a>
-    <a class="list-group-item list-group-item-action">Quinta</a>
-    <a class="list-group-item list-group-item-action">Sexta</a>
-    <a class="list-group-item list-group-item-action">Sábado</a>
+  <h5 class="mb-3">Selecione o dia</h5>
+
+  <div class="row g-3" id="dias"></div>
+
+  <div id="areaHorarios" class="mt-4" style="display:none;">
+    <h5 class="mb-3">Horários disponíveis</h5>
+    <div id="horarios"></div>
+
+    <button class="btn btn-success mt-3" onclick="confirmarReserva()">Confirmar Reserva</button>
   </div>
+
 </div>
 
 <script>
-if (localStorage.getItem("tipo") !== "user") {
+if (!localStorage.getItem("tipo")) {
   window.location.href = "index.html";
+}
+
+const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const horariosDisponiveis = [
+  "07:00","07:15","07:30","07:45",
+  "08:00","08:15","08:30","08:45",
+  "09:00","09:15","09:30","09:45",
+  "10:00","10:15","10:30","10:45",
+  "11:00","11:15","11:30","11:45",
+  "12:00"
+];
+
+let diaSelecionado = null;
+let horariosSelecionados = [];
+
+function carregarDias() {
+  const container = document.getElementById("dias");
+  container.innerHTML = "";
+
+  diasSemana.forEach(dia => {
+    const col = document.createElement("div");
+    col.className = "col-6 col-md-4";
+
+    const card = document.createElement("div");
+    card.className = "card dia-card text-center p-3";
+    card.innerText = dia;
+
+    card.onclick = () => selecionarDia(dia, card);
+
+    col.appendChild(card);
+    container.appendChild(col);
+  });
+}
+
+function selecionarDia(dia, card) {
+  document.querySelectorAll(".dia-card").forEach(c => c.classList.remove("active"));
+  card.classList.add("active");
+
+  diaSelecionado = dia;
+  horariosSelecionados = [];
+
+  document.getElementById("areaHorarios").style.display = "block";
+  carregarHorarios();
+}
+
+function carregarHorarios() {
+  const container = document.getElementById("horarios");
+  container.innerHTML = "";
+
+  horariosDisponiveis.forEach(h => {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-outline-primary horario-btn";
+    btn.innerText = h;
+
+    btn.onclick = () => toggleHorario(h, btn);
+
+    container.appendChild(btn);
+  });
+}
+
+function toggleHorario(h, btn) {
+  if (horariosSelecionados.includes(h)) {
+    horariosSelecionados = horariosSelecionados.filter(x => x !== h);
+    btn.classList.remove("btn-primary");
+    btn.classList.add("btn-outline-primary");
+  } else {
+    horariosSelecionados.push(h);
+    btn.classList.remove("btn-outline-primary");
+    btn.classList.add("btn-primary");
+  }
+}
+
+function confirmarReserva() {
+  if (!diaSelecionado || horariosSelecionados.length === 0) {
+    alert("Selecione um dia e pelo menos um horário");
+    return;
+  }
+
+  alert(
+    "Reserva simulada:\n\n" +
+    "Dia: " + diaSelecionado + "\n" +
+    "Horários: " + horariosSelecionados.join(", ")
+  );
+
+  horariosSelecionados = [];
+  document.getElementById("areaHorarios").style.display = "none";
 }
 
 function logout() {
   localStorage.clear();
   window.location.href = "index.html";
 }
+
+carregarDias();
 </script>
 
 </body>
