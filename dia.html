@@ -2,162 +2,126 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Horários do Dia</title>
+  <title>Reservas do Dia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
     body {
       background: #f4f6f9;
     }
-
-    .horario {
+    .hora-card {
       cursor: pointer;
-      transition: background .2s;
+      transition: transform .15s, box-shadow .15s;
     }
-
-    .horario:hover {
+    .hora-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    }
+    .hora {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .ocupado {
       background: #e9ecef;
+      color: #6c757d;
+      cursor: not-allowed;
     }
   </style>
 </head>
+
 <body>
 
-<div class="container mt-4">
-  <a href="home.html" class="btn btn-secondary mb-3">Voltar</a>
-
-  <h4 id="titulo"></h4>
-
-  <div id="lista" class="list-group mt-3"></div>
-</div>
-
-<!-- MODAL -->
-<div class="modal fade" id="modalReserva" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Nova Reserva</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <p id="infoHorario" class="fw-semibold"></p>
-
-        <div class="mb-3">
-          <label class="form-label">Nome</label>
-          <input type="text" id="nome" class="form-control">
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancelar
-        </button>
-        <button class="btn btn-primary" onclick="confirmarReserva()">
-          Confirmar
-        </button>
-      </div>
-
-    </div>
+<nav class="navbar navbar-dark bg-primary">
+  <div class="container-fluid">
+    <span class="navbar-brand">Reservas do dia</span>
+    <button class="btn btn-outline-light btn-sm" onclick="voltar()">Voltar</button>
   </div>
+</nav>
+
+<div class="container mt-4">
+  <h5 id="tituloDia" class="mb-3"></h5>
+  <div id="listaHorarios" class="row gy-3"></div>
 </div>
 
 <script>
-let horarioSelecionado = "";
-let dataSelecionada = "";
+const params = new URLSearchParams(window.location.search);
+const dataStr = params.get("data");
 
-function getData() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("data");
+function parseDataLocal(dataStr) {
+  const [ano, mes, dia] = dataStr.split("-").map(Number);
+  return new Date(ano, mes - 1, dia);
 }
+
+const data = parseDataLocal(dataStr);
+
+function formatarData(d) {
+  return d.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+}
+
+document.getElementById("tituloDia").innerText =
+  formatarData(data).replace("-feira", "").toUpperCase();
 
 function gerarHorarios() {
   const horarios = [];
   let h = 7;
   let m = 0;
 
-  while (h < 18) {
+  while (h < 18 || (h === 18 && m === 0)) {
     horarios.push(
-      String(h).padStart(2, "0") + ":" +
-      String(m).padStart(2, "0")
+      String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0")
     );
-
     m += 15;
     if (m === 60) {
       m = 0;
       h++;
     }
   }
-
   return horarios;
 }
 
-function renderizar() {
-  dataSelecionada = getData();
-  if (!dataSelecionada) return;
+function carregarHorarios() {
+  const container = document.getElementById("listaHorarios");
+  container.innerHTML = "Carregando...";
 
-  const [y, m, d] = dataSelecionada.split("-");
-  const data = new Date(y, m - 1, d);
+  fetch(`https://script.google.com/macros/s/AKfycbyfRPXOwc_5o3KjPDY6usuuKYW_dAINMLjnlYhGryzdBoDhOJh8lF3Nm8I-RUIwf9f6/exec?action=horarios&data=${dataStr}`)
+    .then(r => r.json())
+    .then(horariosLivres => {
+      container.innerHTML = "";
 
-  document.getElementById("titulo").innerText =
-    data.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
+      const todos = gerarHorarios();
+
+      todos.forEach(h => {
+        const livre = horariosLivres.includes(h);
+
+        const col = document.createElement("div");
+        col.className = "col-6 col-md-3";
+
+        col.innerHTML = `
+          <div class="card hora-card ${livre ? "" : "ocupado"}">
+            <div class="card-body text-center">
+              <div class="hora">${h}</div>
+              <small>${livre ? "Disponível" : "Ocupado"}</small>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(col);
+      });
     });
-
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
-
-  gerarHorarios().forEach(h => {
-    const div = document.createElement("div");
-    div.className = "list-group-item horario";
-    div.innerText = h + " - Disponível";
-
-    div.onclick = () => abrirModal(h);
-
-    lista.appendChild(div);
-  });
 }
 
-function abrirModal(horario) {
-  horarioSelecionado = horario;
-  document.getElementById("nome").value = "";
-  document.getElementById("infoHorario").innerText =
-    `Horário: ${horarioSelecionado}`;
-
-  const modal = new bootstrap.Modal(
-    document.getElementById("modalReserva")
-  );
-  modal.show();
+function voltar() {
+  window.location.href = "home.html";
 }
 
-function confirmarReserva() {
-  const nome = document.getElementById("nome").value.trim();
-
-  if (!nome) {
-    alert("Informe o nome");
-    return;
-  }
-
-  alert(
-    "Reserva simulada:\n" +
-    "Data: " + dataSelecionada + "\n" +
-    "Horário: " + horarioSelecionado + "\n" +
-    "Nome: " + nome
-  );
-
-  bootstrap.Modal.getInstance(
-    document.getElementById("modalReserva")
-  ).hide();
-}
-
-renderizar();
+carregarHorarios();
 </script>
 
 </body>
