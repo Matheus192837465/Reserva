@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Home - Reservas</title>
+  <title>Reservas | Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,16 +11,20 @@
     body {
       background: #f4f6f9;
     }
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+    }
     .card-dia {
       cursor: pointer;
-      transition: transform .2s;
+      transition: all .2s ease;
     }
     .card-dia:hover {
       transform: scale(1.02);
     }
     .dia-nome {
-      font-size: 1.2rem;
       font-weight: 600;
+      font-size: 1.1rem;
     }
     .dia-data {
       color: #6c757d;
@@ -30,18 +34,33 @@
 
 <body>
 
-<nav class="navbar navbar-dark bg-primary">
-  <div class="container-fluid">
-    <span class="navbar-brand">Reservas</span>
-    <a href="dashboard.html" class="btn btn-outline-light btn-sm">
-      Agenda Geral
-    </a>
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar bg-primary text-white p-3 d-flex flex-column">
+    <h5 class="mb-4">Reservas</h5>
+
+    <ul class="nav nav-pills flex-column gap-2 mb-auto">
+      <li class="nav-item">
+        <a href="home.html" class="nav-link active">Home</a>
+      </li>
+      <li class="nav-item">
+        <a href="agenda.html" class="nav-link text-white">Agenda Geral</a>
+      </li>
+      <li class="nav-item">
+        <a href="nova.html" class="nav-link text-white">Nova Reserva</a>
+      </li>
+    </ul>
+
+    <button class="btn btn-light btn-sm w-100 mt-3" onclick="logout()">Sair</button>
   </div>
-</nav>
-  
-<div class="container mt-4">
-  <h5 class="mb-3">Semana atual</h5>
-  <div id="dias" class="row gy-3"></div>
+
+  <!-- CONTEÚDO -->
+  <div class="flex-grow-1 p-4">
+    <h5 class="mb-4">Semana Atual</h5>
+    <div id="dias" class="row gy-3"></div>
+  </div>
+
 </div>
 
 <script>
@@ -57,39 +76,43 @@ function obterSemana() {
   return dias;
 }
 
-function formatarData(d) {
-  return d.toLocaleDateString("pt-BR");
-}
-
 function nomeDia(d) {
   return d.toLocaleDateString("pt-BR", { weekday: "long" })
     .replace("-feira", "")
     .toUpperCase();
 }
 
+function formatarData(d) {
+  return d.toLocaleDateString("pt-BR");
+}
+
 function renderizarHome() {
   const container = document.getElementById("dias");
-  const semana = obterSemana();
+  container.innerHTML = "";
 
-  semana.forEach(d => {
-    const dataISO = d.toISOString().slice(0,10); // yyyy-mm-dd
+  obterSemana().forEach(d => {
+    const dataISO = d.toISOString().slice(0,10);
 
-    const col = document.createElement("div");
-    col.className = "col-12";
-
-    col.innerHTML = `
-      <a href="dia.html?data=${dataISO}" class="text-decoration-none text-dark">
-        <div class="card card-dia shadow-sm">
+    container.innerHTML += `
+      <div class="col-12">
+        <div class="card card-dia shadow-sm" onclick="abrirDia('${dataISO}')">
           <div class="card-body">
             <div class="dia-nome">${nomeDia(d)}</div>
             <div class="dia-data">${formatarData(d)}</div>
             <div class="text-success mt-2">Ver horários</div>
           </div>
         </div>
-      </a>
+      </div>
     `;
-    container.appendChild(col);
   });
+}
+
+function abrirDia(data) {
+  window.location.href = "dia.html?data=" + data;
+}
+
+function logout() {
+  window.location.href = "index.html";
 }
 
 renderizarHome();
