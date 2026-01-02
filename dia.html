@@ -5,82 +5,47 @@
   <title>Horários do Dia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
     body {
       background: #f4f6f9;
     }
-
-    .horario-card {
+    .horario {
       cursor: pointer;
-      transition: all .2s;
     }
-
-    .horario-card:hover {
-      transform: scale(1.02);
-    }
-
-    .horario-card.disabled {
+    .horario:hover {
       background: #e9ecef;
-      color: #adb5bd;
-      cursor: not-allowed;
-    }
-
-    .horario-card.selected {
-      background: #0d6efd;
-      color: #fff;
     }
   </style>
 </head>
-
 <body>
 
-<nav class="navbar navbar-dark bg-primary">
-  <div class="container-fluid">
-    <a href="index.html" class="navbar-brand">Reservas</a>
-  </div>
-</nav>
-
 <div class="container mt-4">
+  <a href="home.html" class="btn btn-secondary mb-3">Voltar</a>
+  <h4 id="titulo"></h4>
 
-  <h5 id="tituloData" class="mb-4"></h5>
-
-  <div id="horarios" class="row gy-3"></div>
-
-  <div class="mt-4 d-grid">
-    <button class="btn btn-primary" onclick="confirmarReserva()">Confirmar reserva</button>
-  </div>
-
+  <div id="lista" class="list-group mt-3"></div>
 </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const dataSelecionada = params.get("data");
+function obterDataURL() {
+  const params = new URLSearchParams(window.location.search);
+  const dataStr = params.get("data");
 
-const horariosBase = gerarHorarios();
-const selecionados = [];
+  if (!dataStr) return null;
 
-function gerarHorarios() {
-  const h = [];
-  let hh = 7, mm = 0;
-
-  while (hh < 18 || (hh === 18 && mm === 0)) {
-    h.push(
-      String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0")
-    );
-    mm += 15;
-    if (mm === 60) {
-      mm = 0;
-      hh++;
-    }
-  }
-  return h;
+  const partes = dataStr.split("-");
+  return new Date(
+    partes[0],
+    partes[1] - 1,
+    partes[2],
+    12, 0, 0
+  );
 }
 
-function formatarData(d) {
-  return new Date(d).toLocaleDateString("pt-BR", {
+function formatarTitulo(data) {
+  return data.toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
@@ -88,60 +53,30 @@ function formatarData(d) {
   });
 }
 
-function renderizar() {
-  if (!dataSelecionada) {
-    alert("Data inválida");
-    return;
-  }
+function renderizarHorarios() {
+  const data = obterDataURL();
+  if (!data) return;
 
-  document.getElementById("tituloData").innerText =
-    "Horários — " + formatarData(dataSelecionada);
+  document.getElementById("titulo").innerText = formatarTitulo(data);
 
-  const container = document.getElementById("horarios");
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
 
-  horariosBase.forEach(h => {
-    const col = document.createElement("div");
-    col.className = "col-6 col-md-4";
+  const horarios = [
+    "08:00","09:00","10:00","11:00",
+    "13:00","14:00","15:00","16:00"
+  ];
 
-    const card = document.createElement("div");
-    card.className = "card horario-card text-center p-3";
-    card.innerText = h;
-
-    card.onclick = () => toggleHorario(card, h);
-
-    col.appendChild(card);
-    container.appendChild(col);
+  horarios.forEach(h => {
+    lista.innerHTML += `
+      <div class="list-group-item horario">
+        ${h} - Disponível
+      </div>
+    `;
   });
 }
 
-function toggleHorario(card, hora) {
-  if (card.classList.contains("disabled")) return;
-
-  if (card.classList.contains("selected")) {
-    card.classList.remove("selected");
-    const i = selecionados.indexOf(hora);
-    if (i > -1) selecionados.splice(i, 1);
-  } else {
-    card.classList.add("selected");
-    selecionados.push(hora);
-  }
-}
-
-function confirmarReserva() {
-  if (selecionados.length === 0) {
-    alert("Selecione pelo menos um horário");
-    return;
-  }
-
-  alert(
-    "Data: " + dataSelecionada +
-    "\nHorários: " + selecionados.join(", ")
-  );
-
-  // Aqui depois vamos ligar com o Apps Script
-}
-
-renderizar();
+renderizarHorarios();
 </script>
 
 </body>
