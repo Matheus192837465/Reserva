@@ -50,12 +50,18 @@
 const params = new URLSearchParams(window.location.search);
 const data = params.get("data");
 
-document.getElementById("tituloDia").innerText =
-  "Data: " + new Date(data).toLocaleDateString("pt-BR");
+if (!data) {
+  document.getElementById("tituloDia").innerText =
+    "⚠ Data não informada";
+} else {
+  document.getElementById("tituloDia").innerText =
+    "Data: " + new Date(data + "T00:00").toLocaleDateString("pt-BR");
+}
 
 function gerarHorarios() {
   const h = [];
   let hh = 7, mm = 0;
+
   while (hh < 18 || (hh === 18 && mm === 0)) {
     h.push(
       String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0")
@@ -68,13 +74,20 @@ function gerarHorarios() {
 
 function renderizarHorarios() {
   const div = document.getElementById("listaHorarios");
+  div.innerHTML = "";
+
   gerarHorarios().forEach(h => {
-    div.innerHTML += `
-      <label class="hora">
-        <input type="checkbox" class="form-check-input me-2" value="${h}">
-        ${h}
-      </label>
-    `;
+    const label = document.createElement("label");
+    label.className = "hora";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "form-check-input me-2";
+    cb.value = h;
+
+    label.appendChild(cb);
+    label.append(h);
+    div.appendChild(label);
   });
 }
 
@@ -88,7 +101,7 @@ function reservar() {
   }
 
   alert(
-    "Horários selecionados:\\n" +
+    "Horários selecionados:\n" +
     selecionados.join(", ")
   );
 }
