@@ -2,61 +2,65 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Horários</title>
+  <title>Horários do Dia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    body { background:#f4f6f9; }
-    .hora {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      border-radius: 8px;
-      background: #fff;
-      margin-bottom: 6px;
-      cursor: pointer;
+    body {
+      background: #f4f6f9;
     }
-    .hora:hover {
-      background: #e9f2ff;
+
+    .horario-card {
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .horario-card:hover {
+      transform: scale(1.02);
+    }
+
+    .horario-card.disabled {
+      background: #e9ecef;
+      color: #adb5bd;
+      cursor: not-allowed;
+    }
+
+    .horario-card.selected {
+      background: #0d6efd;
+      color: #fff;
     }
   </style>
 </head>
+
 <body>
 
 <nav class="navbar navbar-dark bg-primary">
   <div class="container-fluid">
-    <a href="index.html" class="navbar-brand">← Voltar</a>
-    <span class="navbar-text text-white">Horários</span>
+    <a href="index.html" class="navbar-brand">Reservas</a>
   </div>
 </nav>
 
-<div class="container mt-3">
+<div class="container mt-4">
 
-  <h5 id="tituloDia" class="mb-3"></h5>
+  <h5 id="tituloData" class="mb-4"></h5>
 
-  <div id="listaHorarios"></div>
+  <div id="horarios" class="row gy-3"></div>
 
-  <div class="d-grid mt-4">
-    <button class="btn btn-success btn-lg" onclick="reservar()">
-      Reservar
-    </button>
+  <div class="mt-4 d-grid">
+    <button class="btn btn-primary" onclick="confirmarReserva()">Confirmar reserva</button>
   </div>
 
 </div>
 
 <script>
 const params = new URLSearchParams(window.location.search);
-const data = params.get("data");
-  
-if (!data) {
-  document.getElementById("tituloDia").innerText =
-    "⚠ Data não informada";
-} else {
-  document.getElementById("tituloDia").innerText =
-    "Data: " + new Date(data + "T00:00").toLocaleDateString("pt-BR");
-}
+const dataSelecionada = params.get("data");
+
+const horariosBase = gerarHorarios();
+const selecionados = [];
 
 function gerarHorarios() {
   const h = [];
@@ -64,49 +68,80 @@ function gerarHorarios() {
 
   while (hh < 18 || (hh === 18 && mm === 0)) {
     h.push(
-      String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0")
+      String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0")
     );
     mm += 15;
-    if (mm === 60) { mm = 0; hh++; }
+    if (mm === 60) {
+      mm = 0;
+      hh++;
+    }
   }
   return h;
 }
 
-function renderizarHorarios() {
-  const div = document.getElementById("listaHorarios");
-  div.innerHTML = "";
-
-  gerarHorarios().forEach(h => {
-    const label = document.createElement("label");
-    label.className = "hora";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.className = "form-check-input me-2";
-    cb.value = h;
-
-    label.appendChild(cb);
-    label.append(h);
-    div.appendChild(label);
+function formatarData(d) {
+  return new Date(d).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
   });
 }
 
-function reservar() {
-  const selecionados = [...document.querySelectorAll("input:checked")]
-    .map(c => c.value);
+function renderizar() {
+  if (!dataSelecionada) {
+    alert("Data inválida");
+    return;
+  }
 
+  document.getElementById("tituloData").innerText =
+    "Horários — " + formatarData(dataSelecionada);
+
+  const container = document.getElementById("horarios");
+
+  horariosBase.forEach(h => {
+    const col = document.createElement("div");
+    col.className = "col-6 col-md-4";
+
+    const card = document.createElement("div");
+    card.className = "card horario-card text-center p-3";
+    card.innerText = h;
+
+    card.onclick = () => toggleHorario(card, h);
+
+    col.appendChild(card);
+    container.appendChild(col);
+  });
+}
+
+function toggleHorario(card, hora) {
+  if (card.classList.contains("disabled")) return;
+
+  if (card.classList.contains("selected")) {
+    card.classList.remove("selected");
+    const i = selecionados.indexOf(hora);
+    if (i > -1) selecionados.splice(i, 1);
+  } else {
+    card.classList.add("selected");
+    selecionados.push(hora);
+  }
+}
+
+function confirmarReserva() {
   if (selecionados.length === 0) {
     alert("Selecione pelo menos um horário");
     return;
   }
 
   alert(
-    "Horários selecionados:\n" +
-    selecionados.join(", ")
+    "Data: " + dataSelecionada +
+    "\nHorários: " + selecionados.join(", ")
   );
+
+  // Aqui depois vamos ligar com o Apps Script
 }
 
-renderizarHorarios();
+renderizar();
 </script>
 
 </body>
