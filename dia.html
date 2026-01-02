@@ -8,15 +8,9 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    body {
-      background: #f4f6f9;
-    }
-    .horario {
-      cursor: pointer;
-    }
-    .horario:hover {
-      background: #e9ecef;
-    }
+    body { background: #f4f6f9; }
+    .horario { cursor: pointer; }
+    .horario:hover { background: #e9ecef; }
   </style>
 </head>
 <body>
@@ -29,35 +23,27 @@
 </div>
 
 <script>
-function obterDataURL() {
+function getData() {
   const params = new URLSearchParams(window.location.search);
-  const dataStr = params.get("data");
+  const d = params.get("data");
 
-  if (!dataStr) return null;
+  if (!d) return null;
 
-  const partes = dataStr.split("-");
-  return new Date(
-    partes[0],
-    partes[1] - 1,
-    partes[2],
-    12, 0, 0
-  );
+  const [y, m, day] = d.split("-");
+  return new Date(y, m - 1, day);
 }
 
-function formatarTitulo(data) {
-  return data.toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
-}
-
-function renderizarHorarios() {
-  const data = obterDataURL();
+function renderizar() {
+  const data = getData();
   if (!data) return;
 
-  document.getElementById("titulo").innerText = formatarTitulo(data);
+  document.getElementById("titulo").innerText =
+    data.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
 
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
@@ -76,7 +62,7 @@ function renderizarHorarios() {
   });
 }
 
-renderizarHorarios();
+renderizar();
 </script>
 
 </body>
