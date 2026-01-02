@@ -43,6 +43,11 @@
 </div>
 
 <script>
+
+function abrirDia(data) {
+  window.location.href = "dia.html?data=" + data;
+}
+  
 function obterSemana() {
   const hoje = new Date();
   const dias = [];
