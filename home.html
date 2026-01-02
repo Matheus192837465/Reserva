@@ -43,17 +43,13 @@
 </div>
 
 <script>
-/* OBTÉM SEGUNDA A SÁBADO DA SEMANA ATUAL */
 function obterSemana() {
   const hoje = new Date();
   const dias = [];
 
-  const inicioSemana = new Date(hoje);
-  inicioSemana.setDate(hoje.getDate() - hoje.getDay() + 1);
-
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(inicioSemana);
-    d.setDate(inicioSemana.getDate() + i);
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(hoje);
+    d.setDate(hoje.getDate() - hoje.getDay() + i);
     dias.push(d);
   }
   return dias;
@@ -64,45 +60,38 @@ function formatarData(d) {
 }
 
 function nomeDia(d) {
-  return d
-    .toLocaleDateString("pt-BR", { weekday: "long" })
+  return d.toLocaleDateString("pt-BR", { weekday: "long" })
     .replace("-feira", "")
     .toUpperCase();
 }
 
-/* RENDERIZA HOME */
 function renderizarHome() {
   const container = document.getElementById("dias");
-  container.innerHTML = "";
-
   const semana = obterSemana();
 
   semana.forEach(d => {
-    const dataISO = d.toISOString().slice(0, 10);
-
     const col = document.createElement("div");
     col.className = "col-12";
 
-    col.innerHTML = `
-      <div class="card card-dia shadow-sm" data-data="${dataISO}">
-        <div class="card-body">
-          <div class="dia-nome">${nomeDia(d)}</div>
-          <div class="dia-data">${formatarData(d)}</div>
-          <div class="text-success mt-2">Horários disponíveis</div>
-        </div>
+    const card = document.createElement("div");
+    card.className = "card card-dia shadow-sm";
+
+    card.addEventListener("click", () => {
+      const data = d.toISOString().slice(0,10);
+      window.location.href = "horarios.html?data=" + data;
+    });
+
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="dia-nome">${nomeDia(d)}</div>
+        <div class="dia-data">${formatarData(d)}</div>
+        <div class="text-success mt-2">Horários disponíveis</div>
       </div>
     `;
 
-    col.querySelector(".card-dia").addEventListener("click", () => {
-      abrirDia(dataISO);
-    });
-
+    col.appendChild(card);
     container.appendChild(col);
   });
-}
-
-function abrirDia(data) {
-  window.location.href = "horarios.html?data=" + data;
 }
 
 renderizarHome();
