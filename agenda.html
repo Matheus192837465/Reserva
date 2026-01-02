@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Reservas | Agenda Geral</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f4f6f9;
+    }
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+    }
+    .agenda-table th, .agenda-table td {
+      font-size: 0.9rem;
+      vertical-align: middle;
+      text-align: center;
+    }
+    .reservado {
+      background: #0d6efd;
+      color: #fff;
+      border-radius: 4px;
+      padding: 4px;
+    }
+    .livre {
+      color: #adb5bd;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar bg-primary text-white p-3 d-flex flex-column">
+    <h5 class="mb-4">Reservas</h5>
+
+    <ul class="nav nav-pills flex-column gap-2 mb-auto">
+      <li class="nav-item">
+        <a href="home.html" class="nav-link text-white">Home</a>
+      </li>
+      <li class="nav-item">
+        <a href="agenda.html" class="nav-link active">Agenda Geral</a>
+      </li>
+      <li class="nav-item">
+        <a href="nova.html" class="nav-link text-white">Nova Reserva</a>
+      </li>
+    </ul>
+
+    <button class="btn btn-light btn-sm w-100 mt-3" onclick="logout()">Sair</button>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <div class="flex-grow-1 p-4">
+    <h5 class="mb-4">Agenda Geral — Semana Atual</h5>
+
+    <div class="table-responsive">
+      <table class="table table-bordered agenda-table">
+        <thead class="table-light">
+          <tr>
+            <th>Horário</th>
+            <th>Seg</th>
+            <th>Ter</th>
+            <th>Qua</th>
+            <th>Qui</th>
+            <th>Sex</th>
+            <th>Sáb</th>
+          </tr>
+        </thead>
+        <tbody id="agenda"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const horarios = [];
+let h = 7, m = 0;
+while (h < 18 || (h === 18 && m === 0)) {
+  horarios.push(String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"));
+  m += 15;
+  if (m === 60) { m = 0; h++; }
+}
+
+function gerarAgenda() {
+  const tbody = document.getElementById("agenda");
+  tbody.innerHTML = "";
+
+  horarios.forEach(h => {
+    let row = `<tr><th>${h}</th>`;
+    for (let i = 0; i < 6; i++) {
+      row += `<td class="livre">Livre</td>`;
+    }
+    row += `</tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function logout() {
+  window.location.href = "index.html";
+}
+
+gerarAgenda();
+</script>
+
+</body>
+</html>
