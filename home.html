@@ -66,11 +66,15 @@
 <script>
 function obterSemana() {
   const hoje = new Date();
-  const dias = [];
+  const segunda = new Date(hoje);
+  const diff = hoje.getDay() === 0 ? -6 : 1 - hoje.getDay();
+  segunda.setDate(hoje.getDate() + diff);
+  segunda.setHours(12,0,0,0);
 
-  for (let i = 1; i <= 6; i++) {
-    const d = new Date(hoje);
-    d.setDate(hoje.getDate() - hoje.getDay() + i);
+  const dias = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(segunda);
+    d.setDate(segunda.getDate() + i);
     dias.push(d);
   }
   return dias;
