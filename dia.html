@@ -11,22 +11,24 @@
     body {
       background: #f4f6f9;
     }
-    .hora-card {
+    .hora-box {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
       cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
+      transition: all .15s;
     }
-    .hora-card:hover {
-      transform: scale(1.02);
-      box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    .hora-box:hover {
+      background: #f1f3f5;
     }
-    .hora {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-    .ocupado {
+    .hora-box.ocupado {
       background: #e9ecef;
       color: #6c757d;
       cursor: not-allowed;
+    }
+    .hora {
+      font-weight: 600;
     }
   </style>
 </head>
@@ -35,14 +37,19 @@
 
 <nav class="navbar navbar-dark bg-primary">
   <div class="container-fluid">
-    <span class="navbar-brand">Reservas do dia</span>
+    <span class="navbar-brand">Reservas do Dia</span>
     <button class="btn btn-outline-light btn-sm" onclick="voltar()">Voltar</button>
   </div>
 </nav>
 
 <div class="container mt-4">
   <h5 id="tituloDia" class="mb-3"></h5>
-  <div id="listaHorarios" class="row gy-3"></div>
+
+  <div id="horarios" class="row gy-2"></div>
+
+  <div class="d-grid mt-4">
+    <button class="btn btn-success" onclick="confirmar()">Confirmar Reserva</button>
+  </div>
 </div>
 
 <script>
@@ -50,71 +57,74 @@ const params = new URLSearchParams(window.location.search);
 const dataStr = params.get("data");
 
 function parseDataLocal(dataStr) {
-  const [ano, mes, dia] = dataStr.split("-").map(Number);
-  return new Date(ano, mes - 1, dia);
+  const [y,m,d] = dataStr.split("-").map(Number);
+  return new Date(y, m-1, d);
 }
 
 const data = parseDataLocal(dataStr);
 
-function formatarData(d) {
-  return d.toLocaleDateString("pt-BR", {
+document.getElementById("tituloDia").innerText =
+  data.toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
     year: "numeric"
-  });
-}
-
-document.getElementById("tituloDia").innerText =
-  formatarData(data).replace("-feira", "").toUpperCase();
+  }).replace("-feira","").toUpperCase();
 
 function gerarHorarios() {
-  const horarios = [];
-  let h = 7;
-  let m = 0;
-
-  while (h < 18 || (h === 18 && m === 0)) {
-    horarios.push(
-      String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0")
-    );
-    m += 15;
-    if (m === 60) {
-      m = 0;
-      h++;
-    }
+  const h = [];
+  let hh = 7, mm = 0;
+  while (hh < 18 || (hh === 18 && mm === 0)) {
+    h.push(String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"));
+    mm += 15;
+    if (mm === 60) { mm = 0; hh++; }
   }
-  return horarios;
+  return h;
 }
 
 function carregarHorarios() {
-  const container = document.getElementById("listaHorarios");
-  container.innerHTML = "Carregando...";
-
   fetch(`https://script.google.com/macros/s/AKfycbyfRPXOwc_5o3KjPDY6usuuKYW_dAINMLjnlYhGryzdBoDhOJh8lF3Nm8I-RUIwf9f6/exec?action=horarios&data=${dataStr}`)
     .then(r => r.json())
-    .then(horariosLivres => {
+    .then(livres => {
+      const todos = gerarHorarios();
+      const container = document.getElementById("horarios");
       container.innerHTML = "";
 
-      const todos = gerarHorarios();
-
       todos.forEach(h => {
-        const livre = horariosLivres.includes(h);
+        const livre = livres.includes(h);
 
         const col = document.createElement("div");
         col.className = "col-6 col-md-3";
 
         col.innerHTML = `
-          <div class="card hora-card ${livre ? "" : "ocupado"}">
-            <div class="card-body text-center">
-              <div class="hora">${h}</div>
-              <small>${livre ? "Disponível" : "Ocupado"}</small>
-            </div>
-          </div>
+          <label class="hora-box ${livre ? "" : "ocupado"}">
+            <input type="checkbox" value="${h}" ${livre ? "" : "disabled"} hidden>
+            <div class="hora">${h}</div>
+            <small>${livre ? "Disponível" : "Ocupado"}</small>
+          </label>
         `;
+
+        col.onclick = () => {
+          const cb = col.querySelector("input");
+          if (!cb.disabled) cb.checked = !cb.checked;
+        };
 
         container.appendChild(col);
       });
     });
+}
+
+function confirmar() {
+  const selecionados = [...document.querySelectorAll("input:checked")]
+    .map(i => i.value);
+
+  if (selecionados.length === 0) {
+    alert("Selecione pelo menos um horário");
+    return;
+  }
+
+  alert("Horários selecionados:\n" + selecionados.join(", "));
+  // Aqui depois ligamos com salvarReserva
 }
 
 function voltar() {
