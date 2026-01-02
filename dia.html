@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Horários</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#f4f6f9; }
+    .hora {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+    .hora:hover {
+      background: #e9f2ff;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a href="index.html" class="navbar-brand">← Voltar</a>
+    <span class="navbar-text text-white">Horários</span>
+  </div>
+</nav>
+
+<div class="container mt-3">
+
+  <h5 id="tituloDia" class="mb-3"></h5>
+
+  <div id="listaHorarios"></div>
+
+  <div class="d-grid mt-4">
+    <button class="btn btn-success btn-lg" onclick="reservar()">
+      Reservar
+    </button>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const data = params.get("data");
+
+document.getElementById("tituloDia").innerText =
+  "Data: " + new Date(data).toLocaleDateString("pt-BR");
+
+function gerarHorarios() {
+  const h = [];
+  let hh = 7, mm = 0;
+  while (hh < 18 || (hh === 18 && mm === 0)) {
+    h.push(
+      String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0")
+    );
+    mm += 15;
+    if (mm === 60) { mm = 0; hh++; }
+  }
+  return h;
+}
+
+function renderizarHorarios() {
+  const div = document.getElementById("listaHorarios");
+  gerarHorarios().forEach(h => {
+    div.innerHTML += `
+      <label class="hora">
+        <input type="checkbox" class="form-check-input me-2" value="${h}">
+        ${h}
+      </label>
+    `;
+  });
+}
+
+function reservar() {
+  const selecionados = [...document.querySelectorAll("input:checked")]
+    .map(c => c.value);
+
+  if (selecionados.length === 0) {
+    alert("Selecione pelo menos um horário");
+    return;
+  }
+
+  alert(
+    "Horários selecionados:\\n" +
+    selecionados.join(", ")
+  );
+}
+
+renderizarHorarios();
+</script>
+
+</body>
+</html>
