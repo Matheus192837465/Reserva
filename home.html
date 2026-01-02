@@ -10,14 +10,38 @@
   <style>
     body {
       background: #f4f6f9;
+      margin: 0;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
     }
     .sidebar {
       width: 240px;
-      min-height: 100vh;
+      background: #0d6efd;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .sidebar a.active,
+    .sidebar a:hover {
+      background: rgba(255,255,255,.15);
+    }
+    .content {
+      flex: 1;
+      padding: 24px;
     }
     .card-dia {
       cursor: pointer;
-      transition: all .2s ease;
+      transition: transform .15s ease;
     }
     .card-dia:hover {
       transform: scale(1.02);
@@ -25,6 +49,7 @@
     .dia-nome {
       font-weight: 600;
       font-size: 1.1rem;
+      text-transform: capitalize;
     }
     .dia-data {
       color: #6c757d;
@@ -34,29 +59,23 @@
 
 <body>
 
-<div class="d-flex">
+<div class="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar bg-primary text-white p-3 d-flex flex-column">
+  <div class="sidebar">
     <h5 class="mb-4">Reservas</h5>
 
-    <ul class="nav nav-pills flex-column gap-2 mb-auto">
-      <li class="nav-item">
-        <a href="home.html" class="nav-link active">Home</a>
-      </li>
-      <li class="nav-item">
-        <a href="agenda.html" class="nav-link text-white">Agenda Geral</a>
-      </li>
-      <li class="nav-item">
-        <a href="nova.html" class="nav-link text-white">Nova Reserva</a>
-      </li>
-    </ul>
+    <a href="home.html" class="active">Home</a>
+    <a href="agenda.html">Agenda Geral</a>
+    <a href="nova.html">Nova Reserva</a>
 
-    <button class="btn btn-light btn-sm w-100 mt-3" onclick="logout()">Sair</button>
+    <div class="mt-auto">
+      <button class="btn btn-light w-100 btn-sm" onclick="logout()">Sair</button>
+    </div>
   </div>
 
   <!-- CONTEÚDO -->
-  <div class="flex-grow-1 p-4">
+  <div class="content">
     <h5 class="mb-4">Semana Atual</h5>
     <div id="dias" class="row gy-3"></div>
   </div>
@@ -81,9 +100,7 @@ function obterSemana() {
 }
 
 function nomeDia(d) {
-  return d.toLocaleDateString("pt-BR", { weekday: "long" })
-    .replace("-feira", "")
-    .toUpperCase();
+  return d.toLocaleDateString("pt-BR", { weekday: "long" });
 }
 
 function formatarData(d) {
