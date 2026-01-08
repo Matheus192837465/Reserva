@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva Urgente</title>
+    <title>Reservas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,14 +16,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+        /* Animação suave na seleção */
+        .slot-btn { transition: all 0.2s; }
+        .slot-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen text-slate-800">
 
     <nav class="w-full md:w-64 bg-white border-r border-gray-200 p-6 flex flex-col shadow-sm">
         <div class="flex items-center gap-3 mb-8 text-slate-800">
-            <i class="fas fa-calendar-check text-2xl text-blue-600"></i>
-            <span class="text-xl font-bold tracking-tight">Reserva<span class="text-blue-600">Sala</span></span>
+            <i class="fas fa-clock text-2xl text-blue-600"></i>
+            <span class="text-xl font-bold tracking-tight">Reserva<span class="text-blue-600">Pro</span></span>
         </div>
         <div class="space-y-2">
             <button onclick="switchTab('book')" id="tab-book" class="w-full text-left px-4 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700 transition"><i class="fas fa-plus mr-2"></i> Nova Reserva</button>
@@ -33,9 +36,12 @@
 
     <main class="flex-1 p-4 md:p-8 overflow-y-auto">
 
-        <div id="view-book" class="max-w-3xl mx-auto">
+        <div id="view-book" class="max-w-4xl mx-auto">
             <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 md:p-8">
-                <h2 class="text-2xl font-bold mb-6 text-slate-800">Agendar Agora</h2>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Agendar Sala</h2>
+                    <span class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold">Multi-seleção Ativada</span>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
@@ -44,44 +50,45 @@
                     </div>
                     <div>
                         <label class="block font-bold text-sm text-slate-600 mb-2">Seu Nome</label>
-                        <input type="text" id="user-name" placeholder="Ex: Matheus" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        <input type="text" id="user-name" placeholder="Ex: Equipe de Vendas" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
                     </div>
                 </div>
 
-                <label class="block font-bold text-sm text-slate-600 mb-3">Selecione o Horário (15 min)</label>
-                <div id="slots-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 mb-8">
-                    </div>
+                <div id="slots-container" class="mb-8">
+                    <div class="text-center py-8 text-gray-400">Selecione uma data para carregar os horários...</div>
+                </div>
 
-                <div class="flex justify-between items-center border-t pt-6">
-                    <div id="selection-msg" class="text-sm font-semibold text-slate-400">Nenhum horário selecionado</div>
+                <div class="flex justify-between items-center border-t pt-6 sticky bottom-0 bg-white">
+                    <div id="selection-msg" class="text-sm font-semibold text-slate-400">Selecione um ou mais horários</div>
                     <button id="btn-save" onclick="saveBooking()" disabled class="bg-green-600 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-all shadow-lg shadow-green-200">
-                        Confirmar Reserva
+                        Confirmar
                     </button>
                 </div>
             </div>
         </div>
 
         <div id="view-dash" class="hidden max-w-4xl mx-auto">
-            <h1 class="text-2xl font-bold text-slate-800 mb-6">Agenda de Hoje</h1>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Reservas Hoje</p>
-                    <h2 id="stats-total" class="text-3xl font-bold text-slate-800 mt-1">0</h2>
+            <header class="mb-8 flex justify-between items-end">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Agenda do Dia</h1>
+                    <p class="text-slate-500" id="dash-date-display">Carregando...</p>
                 </div>
-            </div>
+                <div class="bg-white px-4 py-2 rounded-lg border shadow-sm text-center">
+                    <div class="text-xs text-gray-400 uppercase font-bold">Ocupação</div>
+                    <div class="text-xl font-bold text-blue-600" id="stats-total">0%</div>
+                </div>
+            </header>
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div id="booking-list" class="divide-y divide-slate-100">
-                    <div class="p-8 text-center text-gray-400">Carregando agenda...</div>
-                </div>
+                    </div>
             </div>
         </div>
 
     </main>
 
     <script>
-        // --- 1. CONFIGURAÇÃO JÁ SUBSTITUÍDA ---
+        // --- CONFIGURAÇÃO ---
         const firebaseConfig = {
             apiKey: "AIzaSyCaV9qldmuaTZToQ0KuRQojn1NoGhVDTOI",
             authDomain: "reservasala-9a353.firebaseapp.com",
@@ -91,158 +98,248 @@
             appId: "1:91889605408:web:e44a94274f6ceaac1c1545"
         };
 
-        // Inicializa Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         // Variáveis
-        let selectedTime = null;
-        let occupiedSlots = [];
+        let selectedSlots = []; // Agora é um ARRAY (vários horários)
+        let occupiedSlots = []; // Horários já ocupados no banco
 
-        // --- SISTEMA ---
-
-        function generateSlots() {
-            const slots = [];
-            // Gera das 08:00 às 18:00
-            for (let h = 8; h < 18; h++) {
-                ["00", "15", "30", "45"].forEach(m => {
-                    slots.push(`${h.toString().padStart(2,'0')}:${m}`);
-                });
+        // --- LÓGICA DE HORÁRIOS ---
+        
+        // Gera horários separando Manhã e Tarde
+        function getPeriods() {
+            const morning = [];
+            const afternoon = [];
+            
+            // Manhã: 08:00 até 11:45
+            for (let h = 8; h < 12; h++) {
+                ["00", "15", "30", "45"].forEach(m => morning.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
-            return slots;
+            // Tarde: 13:00 até 18:00
+            for (let h = 13; h < 18; h++) {
+                ["00", "15", "30", "45"].forEach(m => afternoon.push(`${h.toString().padStart(2,'0')}:${m}`));
+            }
+            return { morning, afternoon };
         }
 
-        // Ler Disponibilidade
+        // --- LEITURA (READ) ---
         async function loadAvailability() {
             const date = document.getElementById('date-picker').value;
             if(!date) return;
 
-            const grid = document.getElementById('slots-grid');
-            grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-4"><i class="fas fa-spinner fa-spin"></i> Verificando agenda...</div>';
+            const container = document.getElementById('slots-container');
+            container.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Consultando disponibilidade...</div>';
+            
+            // Limpa seleção anterior ao trocar data
+            selectedSlots = [];
+            updateSelectionUI();
 
             try {
-                // Pega do banco
                 const snapshot = await db.collection("reservas").where("date", "==", date).get();
                 occupiedSlots = [];
-                snapshot.forEach(doc => occupiedSlots.push(doc.data().time));
+                
+                // Agora cada documento pode ter UM ARRAY de horários ("times") ou um horário único ("time")
+                // Vamos suportar os dois para não quebrar o que você já salvou antes
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.times && Array.isArray(data.times)) {
+                        occupiedSlots.push(...data.times); // Adiciona todos os horários do array
+                    } else if (data.time) {
+                        occupiedSlots.push(data.time); // Suporte legado (versão antiga)
+                    }
+                });
+                
                 renderGrid();
             } catch (error) {
                 console.error(error);
-                // Se der erro de permissão (index), mostra alerta
-                if(error.code === 'failed-precondition') {
-                    alert("O banco precisa criar um índice. Abra o Console do Navegador (F12) e clique no link que o Firebase gerou lá.");
-                } else {
-                    toast("Erro ao carregar agenda", "#EF4444");
-                }
+                toast("Erro ao carregar. Verifique o console.", "#EF4444");
             }
         }
 
         function renderGrid() {
-            const grid = document.getElementById('slots-grid');
-            const allSlots = generateSlots();
+            const container = document.getElementById('slots-container');
+            const { morning, afternoon } = getPeriods();
             
-            grid.innerHTML = allSlots.map(time => {
-                const isOccupied = occupiedSlots.includes(time);
-                const isSelected = selectedTime === time;
+            const renderSection = (title, slots, icon) => `
+                <div class="mb-6">
+                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="${icon} text-gray-400"></i> ${title}
+                    </h3>
+                    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                        ${slots.map(time => {
+                            const isOccupied = occupiedSlots.includes(time);
+                            const isSelected = selectedSlots.includes(time);
+                            
+                            let css = "slot-btn py-2 px-1 rounded text-sm font-bold border ";
+                            if (isOccupied) {
+                                css += "bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed line-through";
+                            } else if (isSelected) {
+                                css += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-200 transform scale-105";
+                            } else {
+                                css += "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 cursor-pointer";
+                            }
 
-                let styles = "py-2 px-1 rounded text-sm font-bold transition-all border ";
-                
-                if(isOccupied) {
-                    styles += "bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed line-through";
-                } else if(isSelected) {
-                    styles += "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105";
-                } else {
-                    styles += "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 cursor-pointer";
-                }
+                            return `<button ${isOccupied ? 'disabled' : ''} onclick="toggleSlot('${time}')" class="${css}">${time}</button>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
 
-                return `<button ${isOccupied ? 'disabled' : ''} onclick="selectSlot('${time}')" class="${styles}">${time}</button>`;
-            }).join('');
+            container.innerHTML = 
+                renderSection("Manhã (08h - 12h)", morning, "fas fa-coffee") +
+                "<hr class='border-gray-100 my-4'>" +
+                renderSection("Tarde (13h - 18h)", afternoon, "fas fa-sun");
         }
 
-        function selectSlot(time) {
-            selectedTime = time;
-            document.getElementById('selection-msg').innerHTML = `Selecionado: <strong class="text-blue-600">${time}</strong>`;
-            document.getElementById('btn-save').disabled = false;
-            renderGrid();
+        // --- INTERAÇÃO ---
+        function toggleSlot(time) {
+            // Se já está selecionado, remove. Se não, adiciona.
+            if (selectedSlots.includes(time)) {
+                selectedSlots = selectedSlots.filter(t => t !== time);
+            } else {
+                selectedSlots.push(time);
+            }
+            
+            // Ordena os horários para ficar bonito
+            selectedSlots.sort();
+            
+            renderGrid(); // Atualiza cores
+            updateSelectionUI();
         }
 
-        // Salvar Reserva
+        function updateSelectionUI() {
+            const msg = document.getElementById('selection-msg');
+            const btn = document.getElementById('btn-save');
+            
+            if (selectedSlots.length === 0) {
+                msg.innerText = "Nenhum horário selecionado";
+                btn.disabled = true;
+                btn.innerText = "Confirmar";
+            } else {
+                msg.innerHTML = `${selectedSlots.length} horários: <strong class="text-blue-600">${selectedSlots[0]}...</strong>`;
+                btn.disabled = false;
+                btn.innerText = `Reservar (${selectedSlots.length})`;
+            }
+        }
+
+        // --- GRAVAÇÃO (WRITE) ---
         async function saveBooking() {
             const date = document.getElementById('date-picker').value;
             const name = document.getElementById('user-name').value;
             const btn = document.getElementById('btn-save');
 
-            if(!name) { toast("Digite seu nome!", "#F59E0B"); return; }
+            if(!name) { toast("Digite um nome para a reserva!", "#F59E0B"); return; }
 
             btn.disabled = true;
-            btn.innerHTML = "Salvando...";
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
             try {
-                // Checagem dupla
-                const check = await db.collection("reservas")
-                    .where("date", "==", date).where("time", "==", selectedTime).get();
+                // Verificação final de colisão (para não sobrescrever ninguém)
+                const snapshot = await db.collection("reservas").where("date", "==", date).get();
+                let serverOccupied = [];
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if(d.times) serverOccupied.push(...d.times);
+                    else if(d.time) serverOccupied.push(d.time);
+                });
 
-                if(!check.empty) {
-                    toast("Ops! Acabaram de pegar esse horário.", "#EF4444");
-                    loadAvailability();
+                // Verifica se algum dos meus selecionados já está na lista do servidor
+                const collision = selectedSlots.some(slot => serverOccupied.includes(slot));
+                
+                if (collision) {
+                    toast("Ops! Alguém acabou de reservar um desses horários.", "#EF4444");
+                    loadAvailability(); // Recarrega para mostrar o que foi pego
                     return;
                 }
 
+                // Salva TUDO em um único documento (muito mais limpo pro banco)
                 await db.collection("reservas").add({
                     date: date,
-                    time: selectedTime,
+                    times: selectedSlots, // Array com todos os horários selecionados
+                    startTime: selectedSlots[0], // Apenas para facilitar ordenação
                     user: name,
-                    createdAt: new Date()
+                    createdAt: new Date().toISOString()
                 });
 
-                toast("✅ Reserva confirmada!", "#10B981");
-                selectedTime = null;
+                toast("Reserva realizada com sucesso! ✅", "#10B981");
+                
+                // Limpeza
+                selectedSlots = [];
                 document.getElementById('user-name').value = "";
-                loadAvailability();
+                updateSelectionUI();
+                loadAvailability(); // Atualiza visualmente
                 
             } catch (error) {
                 toast("Erro ao salvar: " + error.message, "#EF4444");
             } finally {
-                btn.innerHTML = "Confirmar Reserva";
-                btn.disabled = true;
+                btn.innerHTML = "Confirmar";
             }
         }
 
-        // Dashboard em Tempo Real
+        // --- DASHBOARD INTELIGENTE ---
         function loadDashboard() {
             const today = new Date().toISOString().split('T')[0];
-            
-            // Ouvinte em tempo real
+            document.getElementById('dash-date-display').innerText = "Visualizando: " + today.split('-').reverse().join('/');
+
             db.collection("reservas")
                 .where("date", "==", today)
                 .onSnapshot((snapshot) => {
                     const list = document.getElementById('booking-list');
-                    const bookings = [];
-                    snapshot.forEach(doc => bookings.push(doc.data()));
-                    
-                    // Ordenar por horário
-                    bookings.sort((a,b) => a.time.localeCompare(b.time));
+                    let bookings = [];
+                    let totalSlotsBusy = 0;
 
-                    document.getElementById('stats-total').innerText = bookings.length;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        
+                        // Normaliza os dados (converte array ou string única)
+                        let timesArr = data.times ? data.times : [data.time];
+                        timesArr.sort();
+                        
+                        // Calcula "Das X até Y"
+                        let start = timesArr[0];
+                        let end = timesArr[timesArr.length - 1];
+                        // Adiciona 15 min ao último horário para mostrar hora de fim real (opcional, visual)
+                        // Deixei simples mostrando o slot final ocupado
+                        
+                        totalSlotsBusy += timesArr.length;
 
-                    if(bookings.length === 0) {
-                        list.innerHTML = '<div class="p-8 text-center text-slate-400">Nenhuma reunião hoje.</div>';
+                        bookings.push({
+                            user: data.user,
+                            timeDisplay: timesArr.length > 1 ? `${start} às ${end}` : start,
+                            duration: timesArr.length * 15 + " min",
+                            rawTime: start // para ordenar
+                        });
+                    });
+
+                    // Ordena por horário de início
+                    bookings.sort((a,b) => a.rawTime.localeCompare(b.rawTime));
+
+                    // Atualiza Stats
+                    const totalSlotsDay = 36; // (4h manhã + 5h tarde) * 4 slots
+                    const percent = Math.round((totalSlotsBusy / totalSlotsDay) * 100);
+                    document.getElementById('stats-total').innerText = percent + "%";
+
+                    if (bookings.length === 0) {
+                        list.innerHTML = '<div class="p-10 text-center text-gray-400">Nenhuma reserva para hoje.<br>A sala está livre!</div>';
                         return;
                     }
 
                     list.innerHTML = bookings.map(b => `
-                        <div class="p-4 flex justify-between items-center hover:bg-slate-50 transition">
+                        <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:bg-slate-50 transition gap-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div>
                                     <div class="font-bold text-slate-700">${b.user}</div>
-                                    <div class="text-xs text-slate-400">Reserva Confirmada</div>
+                                    <div class="text-xs text-slate-400 flex items-center gap-1">
+                                        <i class="fas fa-hourglass-half"></i> ${b.duration}
+                                    </div>
                                 </div>
                             </div>
-                            <div class="font-mono font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded">
-                                ${b.time}
+                            <div class="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded text-sm w-full sm:w-auto text-center">
+                                ${b.timeDisplay}
                             </div>
                         </div>
                     `).join('');
@@ -254,18 +351,15 @@
             document.getElementById('view-book').classList.toggle('hidden', tab !== 'book');
             document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
             
-            // Ajuste visual dos botões
             const activeClass = "bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700";
             const inactiveClass = "hover:bg-gray-50 text-gray-600 font-medium";
 
             if(tab === 'book') {
                 document.getElementById('tab-book').className = `w-full text-left px-4 py-3 rounded-lg transition ${activeClass}`;
                 document.getElementById('tab-dash').className = `w-full text-left px-4 py-3 rounded-lg transition ${inactiveClass}`;
-                // Atualiza data pra hoje ao abrir
                 if(!document.getElementById('date-picker').value) {
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('date-picker').value = today;
-                    document.getElementById('date-picker').min = today;
                     loadAvailability();
                 }
             } else {
@@ -279,10 +373,7 @@
             Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "8px" }, gravity: "top", position: "center" }).showToast();
         }
 
-        // Início
-        window.onload = () => {
-            switchTab('book');
-        };
+        window.onload = () => { switchTab('book'); };
     </script>
 </body>
 </html>
