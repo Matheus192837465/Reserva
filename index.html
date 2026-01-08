@@ -3,147 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva Pro SaaS</title>
+    <title>Agendamento de Salas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; } /* Fundo mais limpo */
         .shimmer {
-            background: linear-gradient(90deg, #eff1f3 25%, #e2e8f0 50%, #eff1f3 75%);
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .active-link { border-left: 4px solid #3B82F6; background: #EFF6FF; color: #1D4ED8; }
+        .active-link { background-color: #E2E8F0; color: #0F172A; font-weight: 700; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen">
+<body class="flex flex-col md:flex-row min-h-screen text-slate-800">
 
-    <!-- Sidebar -->
-    <nav class="w-full md:w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
-        <div class="flex items-center gap-3 mb-10 text-blue-600">
-            <i class="fas fa-layer-group text-2xl"></i>
-            <span class="text-xl font-bold text-gray-800 tracking-tight">FocusRoom</span>
+    <nav class="w-full md:w-64 bg-white border-r border-gray-200 p-6 flex flex-col shadow-sm z-10">
+        <div class="flex items-center gap-3 mb-10 text-slate-800">
+            <i class="fas fa-building text-2xl"></i>
+            <span class="text-xl font-bold tracking-tight">Agendamento</span>
         </div>
-        <div class="space-y-2 flex-1">
-            <button onclick="showSection('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition active-link">
-                <i class="fas fa-home"></i> Dashboard
+        <div class="space-y-1 flex-1">
+            <button onclick="showSection('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition active-link text-slate-600 hover:bg-gray-50">
+                <i class="fas fa-chart-bar w-5"></i> Visão Geral
             </button>
-            <button onclick="showSection('book')" id="nav-book" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-gray-500 hover:bg-gray-50">
-                <i class="fas fa-calendar-plus"></i> Nova Reserva
+            <button onclick="showSection('book')" id="nav-book" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-slate-600 hover:bg-gray-50">
+                <i class="fas fa-plus-square w-5"></i> Nova Reserva
             </button>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-6 md:p-12 overflow-y-auto">
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto">
         
-        <!-- SECTION DASHBOARD -->
         <section id="sec-dash">
+            <header class="mb-8">
+                <h1 class="text-2xl font-bold text-slate-800">Status das Salas</h1>
+                <p class="text-slate-500">Acompanhamento em tempo real.</p>
+            </header>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p class="text-sm font-semibold text-gray-400 uppercase">Hoje</p>
-                    <h2 id="dash-total" class="text-3xl font-bold text-gray-800">--</h2>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Hoje</p>
+                    <h2 id="dash-total" class="text-3xl font-bold text-slate-800 mt-2">--</h2>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p class="text-sm font-semibold text-gray-400 uppercase">Próximo</p>
-                    <h2 id="dash-next" class="text-3xl font-bold text-blue-600">--</h2>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p class="text-sm font-semibold text-gray-400 uppercase">Status</p>
-                    <h2 class="text-3xl font-bold text-green-500 italic">Online</h2>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Próxima Ocupação</p>
+                    <h2 id="dash-next" class="text-3xl font-bold text-blue-600 mt-2">--</h2>
                 </div>
             </div>
 
-            <h3 class="text-lg font-bold mb-4 text-gray-700">Agenda do Dia</h3>
+            <h3 class="text-lg font-bold mb-4 text-slate-700">Agenda Confirmada</h3>
             <div id="dash-list" class="space-y-3">
-                <!-- Skeletons -->
-                <div class="shimmer h-20 rounded-2xl"></div>
-                <div class="shimmer h-20 rounded-2xl"></div>
+                <div class="shimmer h-16 rounded-xl w-full"></div>
+                <div class="shimmer h-16 rounded-xl w-full"></div>
             </div>
         </section>
 
-        <!-- SECTION BOOKING -->
-        <section id="sec-book" class="hidden max-w-2xl mx-auto">
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Reservar Horário</h2>
+        <section id="sec-book" class="hidden max-w-3xl mx-auto">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+                <div class="mb-8 pb-6 border-b border-slate-100">
+                    <h2 class="text-2xl font-bold text-slate-800">Reservar Sala</h2>
+                    <p class="text-slate-500">Selecione data e horário.</p>
+                </div>
                 
-                <label class="block text-sm font-bold text-gray-500 uppercase mb-2">Data</label>
-                <input type="date" id="input-date" onchange="fetchOccupiedSlots()" class="w-full mb-8 p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
-
-                <label class="block text-sm font-bold text-gray-500 uppercase mb-4">Escolha o Horário (15 min)</label>
-                <div id="grid-slots" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
-                    <!-- Slots dinâmicos -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Data</label>
+                    <input type="date" id="input-date" onchange="fetchOccupiedSlots()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 font-medium">
                 </div>
 
-                <button id="btn-confirm" onclick="submitBooking()" disabled class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 disabled:opacity-30 disabled:shadow-none transition-all">
-                    Confirmar Agendamento
-                </button>
+                <div class="mb-8">
+                    <label class="block text-sm font-bold text-slate-700 mb-3">Horários (Intervalos de 15min)</label>
+                    <div id="grid-slots" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        <div class="col-span-full py-8 text-center text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                            Selecione uma data acima para carregar
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                    <span id="selection-label" class="text-sm font-medium text-slate-500">Nada selecionado</span>
+                    <button id="btn-confirm" onclick="submitBooking()" disabled class="bg-slate-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                        Confirmar
+                    </button>
+                </div>
             </div>
         </section>
     </main>
 
     <script>
-        // --- CONFIGURAÇÃO ---
+        // ============================================================
+        // CONFIGURAÇÃO OBRIGATÓRIA - COLE SEU LINK ABAIXO
+        // ============================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbwoPvQuLU7Ov1gFiFXyqIOkTwxO5WRej64oy5jRqq0sm-FQ2fmENCPRTSw4Hs766_dY/exec"; 
+        // Exemplo: "https://script.google.com/macros/s/AKfycbx.../exec"
         
         let selectedTime = null;
         let occupiedTimes = [];
 
+        // --- FUNÇÕES DE API ---
         async function apiGet(params) {
+            if (API_URL.includes("COLE_AQUI")) {
+                toast("ERRO: Você não configurou o Link do Google Script no código HTML!", "#EF4444");
+                return null;
+            }
             try {
-                // Adicionamos 'redirect: "follow"' para garantir que ele siga o 302 do Google
-                const response = await fetch(${API_URL}?${params}, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error('Network response was not ok');
-                
+                const response = await fetch(`${API_URL}?${params}`);
                 return await response.json();
             } catch (error) {
-                console.error("Erro na API:", error);
+                console.error(error);
                 throw error;
             }
         }
 
-        // --- DASHBOARD LOGIC ---
+        // --- DASHBOARD ---
         async function loadDashboard() {
             const list = document.getElementById('dash-list');
             try {
                 const data = await apiGet('action=getDashboard');
-                document.getElementById('dash-total').innerText = data.total;
-                document.getElementById('dash-next').innerText = data.next;
+                if(!data) return; // Se der erro na URL
 
-                if (data.bookings.length === 0) {
-                    list.innerHTML = `<div class="p-10 text-center text-gray-400 bg-white rounded-2xl border-2 border-dashed">Nenhuma reserva para hoje</div>`;
+                document.getElementById('dash-total').innerText = data.total || 0;
+                document.getElementById('dash-next').innerText = data.next || "--:--";
+
+                if (!data.bookings || data.bookings.length === 0) {
+                    list.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">Agenda livre hoje</div>`;
                     return;
                 }
 
                 list.innerHTML = data.bookings.map(b => `
-                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">${b.time[0]}${b.time[1]}</div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center hover:border-blue-300 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold text-xs">
+                                <i class="fas fa-user"></i>
+                            </div>
                             <div>
-                                <h4 class="font-bold text-gray-800">${b.user}</h4>
-                                <p class="text-sm text-gray-400">Sala de Reunião Individual</p>
+                                <h4 class="font-bold text-slate-700 text-sm">${b.user}</h4>
+                                <p class="text-xs text-slate-400">${b.email || 'Funcionário'}</p>
                             </div>
                         </div>
-                        <span class="font-bold text-blue-600 bg-blue-50 px-4 py-1 rounded-full">${b.time}</span>
+                        <span class="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-md text-sm">${b.time}</span>
                     </div>
                 `).join('');
             } catch (e) {
-                console.error("Erro ao carregar dashboard", e);
+                list.innerHTML = `<div class="text-red-500 text-sm">Erro ao carregar dados. Verifique o link.</div>`;
             }
         }
 
-        // --- BOOKING LOGIC ---
+        // --- LÓGICA DE HORÁRIOS ---
         function generateTimeSlots() {
             const slots = [];
-            for (let hour = 8; hour <= 18; hour++) {
+            for (let hour = 8; hour < 18; hour++) {
                 ["00", "15", "30", "45"].forEach(min => {
                     slots.push(`${hour.toString().padStart(2, '0')}:${min}`);
                 });
@@ -152,21 +165,22 @@
         }
 
         async function fetchOccupiedSlots() {
-        const date = document.getElementById('input-date').value;
-        if(!date) return;
-    
-        const grid = document.getElementById('grid-slots');
-        grid.innerHTML = Array(8).fill('<div class="shimmer h-12 rounded-xl"></div>').join('');
-        
-        try {
-            const data = await apiGet(action=getSlots&date=${date});
-            occupiedTimes = data.occupied || [];
-            renderGrid();
-        } catch (e) {
-            toast("Erro ao carregar horários. Verifique o console.", "#EF4444");
-            grid.innerHTML = <p class="col-span-full text-center text-red-500 text-sm">Erro de conexão com o Google Script.</p>;
+            const date = document.getElementById('input-date').value;
+            if(!date) return;
+
+            const grid = document.getElementById('grid-slots');
+            grid.innerHTML = Array(15).fill('<div class="shimmer h-10 rounded-lg"></div>').join('');
+            
+            try {
+                const data = await apiGet(`action=getSlots&date=${date}`);
+                if(data) {
+                    occupiedTimes = data.occupied || [];
+                    renderGrid();
+                }
+            } catch (e) {
+                toast("Erro de conexão. O link do script está correto?", "#EF4444");
+            }
         }
-    }
 
         function renderGrid() {
             const grid = document.getElementById('grid-slots');
@@ -176,70 +190,101 @@
                 const isOccupied = occupiedTimes.includes(time);
                 const isSelected = selectedTime === time;
                 
-                return `
-                    <button 
-                        ${isOccupied ? 'disabled' : ''} 
-                        onclick="selectTime('${time}')"
-                        class="p-3 rounded-xl border-2 font-bold text-sm transition-all
-                        ${isOccupied ? 'bg-gray-100 border-gray-100 text-gray-300 line-through cursor-not-allowed' : 
-                          isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 
-                          'bg-white border-gray-100 text-gray-600 hover:border-blue-300 hover:bg-blue-50'}">
-                        ${time}
-                    </button>
-                `;
+                // Estilização condicional
+                let classes = "py-2 px-1 rounded-lg text-sm font-semibold border transition-all duration-200 ";
+                
+                if (isOccupied) {
+                    classes += "bg-slate-100 text-slate-300 border-transparent cursor-not-allowed line-through";
+                } else if (isSelected) {
+                    classes += "bg-slate-800 text-white border-slate-800 shadow-md transform scale-105";
+                } else {
+                    classes += "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 cursor-pointer";
+                }
+
+                return `<button ${isOccupied ? 'disabled' : ''} onclick="selectTime('${time}')" class="${classes}">${time}</button>`;
             }).join('');
         }
 
         function selectTime(time) {
             selectedTime = time;
+            document.getElementById('selection-label').innerHTML = `Selecionado: <strong class="text-blue-600">${time}</strong>`;
             document.getElementById('btn-confirm').disabled = false;
             renderGrid();
         }
 
         async function submitBooking() {
+            if (API_URL.includes("COLE_AQUI")) {
+                toast("Configure o link do Script primeiro!", "#EF4444");
+                return;
+            }
+
             const btn = document.getElementById('btn-confirm');
             const date = document.getElementById('input-date').value;
             
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reservando...';
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processando...';
 
             try {
-                // Google Apps Script exige fetch com POST e body stringificado
+                // Envio POST
                 await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Necessário para evitar erro de redirecionamento CORS do Google
-                    body: JSON.stringify({ date, time: selectedTime })
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        date: date, 
+                        time: selectedTime,
+                        name: "Usuário", // Você pode adicionar um campo de nome depois
+                        email: "email@empresa.com"
+                    })
                 });
 
                 toast("Reserva realizada com sucesso!", "#10B981");
+                
+                // Reset
                 selectedTime = null;
+                document.getElementById('selection-label').innerText = "Nada selecionado";
+                
+                // Atualiza as telas
                 setTimeout(() => {
-                    showSection('dash');
-                    loadDashboard();
-                }, 1500);
+                    fetchOccupiedSlots(); // Atualiza os botões (o seu vai ficar cinza)
+                    loadDashboard();      // Atualiza a home
+                    btn.innerHTML = "Confirmar";
+                }, 1000);
+
             } catch (e) {
-                toast("Erro ao processar reserva", "#EF4444");
+                toast("Erro ao processar. Tente novamente.", "#EF4444");
                 btn.disabled = false;
+                btn.innerHTML = "Confirmar";
             }
         }
 
-        // --- UI UTILS ---
+        // --- UTILITÁRIOS ---
         function showSection(sec) {
             document.getElementById('sec-dash').classList.toggle('hidden', sec !== 'dash');
             document.getElementById('sec-book').classList.toggle('hidden', sec !== 'book');
+            
+            // Atualiza menu
             document.getElementById('nav-dash').classList.toggle('active-link', sec === 'dash');
+            document.getElementById('nav-dash').classList.toggle('text-slate-600', sec !== 'dash');
+            
             document.getElementById('nav-book').classList.toggle('active-link', sec === 'book');
+            document.getElementById('nav-book').classList.toggle('text-slate-600', sec !== 'book');
+            
+            if(sec === 'dash') loadDashboard();
         }
 
         function toast(msg, color) {
-            Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "12px" } }).showToast();
+            Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", style: { background: color, borderRadius: "8px", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" } }).showToast();
         }
 
-        // Init
+        // Inicialização
         window.onload = () => {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('input-date').value = today;
-            document.getElementById('input-date').min = today;
+            const dateInput = document.getElementById('input-date');
+            dateInput.value = today;
+            dateInput.min = today;
+            
+            // Tenta carregar. Se o link estiver errado, o usuário verá o erro no console/toast.
             loadDashboard();
         };
     </script>
