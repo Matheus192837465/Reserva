@@ -3,349 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Reservas</title>
+    <title>Reserva Pro SaaS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
-        
-        /* Animação de Carregamento (Efeito Shimmer) */
         .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, #eff1f3 25%, #e2e8f0 50%, #eff1f3 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
-        @keyframes shimmer { 
-            0% { background-position: -200% 0; } 
-            100% { background-position: 200% 0; } 
-        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .active-link { border-left: 4px solid #3B82F6; background: #EFF6FF; color: #1D4ED8; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+<body class="flex flex-col md:flex-row min-h-screen">
 
-    <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col z-50">
-        <div class="p-6 flex items-center gap-3 border-b border-gray-100">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                <i class="fas fa-calendar-alt"></i>
-            </div>
-            <span class="font-bold text-xl tracking-tight text-gray-800">Reserva<span class="text-blue-600">Pro</span></span>
+    <!-- Sidebar -->
+    <nav class="w-full md:w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
+        <div class="flex items-center gap-3 mb-10 text-blue-600">
+            <i class="fas fa-layer-group text-2xl"></i>
+            <span class="text-xl font-bold text-gray-800 tracking-tight">FocusRoom</span>
         </div>
-        
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium">
-                <i class="fas fa-chart-pie w-5"></i> Dashboard
+        <div class="space-y-2 flex-1">
+            <button onclick="showSection('dash')" id="nav-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition active-link">
+                <i class="fas fa-home"></i> Dashboard
             </button>
-            <button onclick="switchTab('booking')" id="nav-booking" class="w-full flex items-center gap-3 px-4 py-3 text-blue-600 bg-blue-50 rounded-xl font-medium transition-colors">
-                <i class="fas fa-plus-circle w-5"></i> Nova Reserva
+            <button onclick="showSection('book')" id="nav-book" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-calendar-plus"></i> Nova Reserva
             </button>
-        </nav>
-    </aside>
+        </div>
+    </nav>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-12 overflow-y-auto">
         
-        <div id="view-dashboard" class="hidden max-w-5xl mx-auto">
-            <header class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Visão Geral</h1>
-                <p class="text-gray-500">Acompanhe a ocupação das salas hoje.</p>
-            </header>
-            
+        <!-- SECTION DASHBOARD -->
+        <section id="sec-dash">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i class="fas fa-calendar-check"></i></div>
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase">Reservas Totais</p>
-                            <h3 class="text-2xl font-bold text-gray-800" id="dash-total">--</h3>
-                        </div>
-                    </div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase">Hoje</p>
+                    <h2 id="dash-total" class="text-3xl font-bold text-gray-800">--</h2>
                 </div>
-                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-green-100 text-green-600 rounded-xl"><i class="fas fa-clock"></i></div>
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase">Status do Sistema</p>
-                            <h3 class="text-xl font-bold text-green-600">Online</h3>
-                        </div>
-                    </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-sm font-semibold text-gray-400 uppercase">Próximo</p>
+                    <h2 id="dash-next" class="text-3xl font-bold text-blue-600">--</h2>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-sm font-semibold text-gray-400 uppercase">Status</p>
+                    <h2 class="text-3xl font-bold text-green-500 italic">Online</h2>
                 </div>
             </div>
 
-            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-center">
-                <h3 class="text-blue-800 font-bold text-lg mb-2">Precisa de uma sala?</h3>
-                <p class="text-blue-600 mb-4">Verifique a disponibilidade e reserve em segundos.</p>
-                <button onclick="switchTab('booking')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Agendar Agora</button>
+            <h3 class="text-lg font-bold mb-4 text-gray-700">Agenda do Dia</h3>
+            <div id="dash-list" class="space-y-3">
+                <!-- Skeletons -->
+                <div class="shimmer h-20 rounded-2xl"></div>
+                <div class="shimmer h-20 rounded-2xl"></div>
             </div>
-        </div>
+        </section>
 
-        <div id="view-booking" class="max-w-3xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="p-6 border-b border-gray-100 bg-gray-50">
-                    <h2 class="text-xl font-bold text-gray-800">Agendar Horário</h2>
-                    <p class="text-sm text-gray-500">Selecione a data para ver os horários de 15 em 15 min.</p>
+        <!-- SECTION BOOKING -->
+        <section id="sec-book" class="hidden max-w-2xl mx-auto">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Reservar Horário</h2>
+                
+                <label class="block text-sm font-bold text-gray-500 uppercase mb-2">Data</label>
+                <input type="date" id="input-date" onchange="fetchOccupiedSlots()" class="w-full mb-8 p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+
+                <label class="block text-sm font-bold text-gray-500 uppercase mb-4">Escolha o Horário (15 min)</label>
+                <div id="grid-slots" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
+                    <!-- Slots dinâmicos -->
                 </div>
 
-                <div class="p-6 space-y-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Data da Reunião</label>
-                        <input type="date" id="date-input" onchange="fetchSlots()" 
-                            class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Seu Nome</label>
-                            <input type="text" id="user-name" placeholder="Ex: Matheus" 
-                                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Email (Opcional)</label>
-                            <input type="email" id="user-email" placeholder="nome@empresa.com" 
-                                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-3">Horários Disponíveis</label>
-                        
-                        <div id="loading-slots" class="hidden grid grid-cols-4 gap-3">
-                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
-                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
-                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
-                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
-                        </div>
-
-                        <div id="slots-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                            <div class="col-span-full text-center text-gray-400 py-4">Selecione uma data acima para ver a agenda.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <div class="text-sm">
-                        <span id="selected-summary" class="font-bold text-gray-800">Nenhum horário selecionado</span>
-                    </div>
-                    <button id="btn-confirm" onclick="confirmBooking()" disabled
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                        <span>Confirmar Reserva</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
+                <button id="btn-confirm" onclick="submitBooking()" disabled class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 disabled:opacity-30 disabled:shadow-none transition-all">
+                    Confirmar Agendamento
+                </button>
             </div>
-        </div>
-
+        </section>
     </main>
 
     <script>
-        // ==========================================
-        // CONFIGURAÇÕES DO SISTEMA
-        // ==========================================
+        // --- CONFIGURAÇÃO ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbwoPvQuLU7Ov1gFiFXyqIOkTwxO5WRej64oy5jRqq0sm-FQ2fmENCPRTSw4Hs766_dY/exec"; 
         
-        // SEU LINK JA ESTA AQUI:
-        const API_URL = "https://script.google.com/macros/s/AKfycbwoPvQuLU7Ov1gFiFXyqIOkTwxO5WRej64oy5jRqq0sm-FQ2fmENCPRTSw4Hs766_dY/exec";
-        
-        const START_HOUR = 8; // Início: 08:00
-        const END_HOUR = 18;  // Fim: 18:00
-        const INTERVAL = 15;  // Intervalo de 15 minutos
-
         let selectedTime = null;
-        let occupiedSlots = [];
+        let occupiedTimes = [];
 
-        // Inicialização ao abrir a tela
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('date-input');
-            dateInput.min = today; 
-            dateInput.value = today;
-            
-            // Já busca os dados do Google assim que abre
-            fetchSlots();
-            updateDashboardStats();
-        });
-
-        // Alternar entre Dashboard e Reserva
-        function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-booking').classList.add('hidden');
-            
-            // Reseta cores do menu
-            document.getElementById('nav-dashboard').className = "w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium";
-            document.getElementById('nav-booking').className = "w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium";
-
-            // Mostra a tela certa
-            document.getElementById(`view-${tab}`).classList.remove('hidden');
-            
-            // Pinta o menu ativo de azul
-            const activeClass = "bg-blue-50 text-blue-600";
-            document.getElementById(`nav-${tab}`).classList.add(...activeClass.split(" "));
-            document.getElementById(`nav-${tab}`).classList.remove("text-gray-600");
+        async function apiGet(params) {
+            const response = await fetch(`${API_URL}?${params}`);
+            return await response.json();
         }
 
-        // Função Matemática: Cria horários de 15 em 15 min (Não é lista fixa!)
-        function generateTimeSlots() {
-            let times = [];
-            for (let h = START_HOUR; h < END_HOUR; h++) {
-                for (let m = 0; m < 60; m += INTERVAL) {
-                    let hourStr = h.toString().padStart(2, '0');
-                    let minStr = m.toString().padStart(2, '0');
-                    times.push(`${hourStr}:${minStr}`);
+        // --- DASHBOARD LOGIC ---
+        async function loadDashboard() {
+            const list = document.getElementById('dash-list');
+            try {
+                const data = await apiGet('action=getDashboard');
+                document.getElementById('dash-total').innerText = data.total;
+                document.getElementById('dash-next').innerText = data.next;
+
+                if (data.bookings.length === 0) {
+                    list.innerHTML = `<div class="p-10 text-center text-gray-400 bg-white rounded-2xl border-2 border-dashed">Nenhuma reserva para hoje</div>`;
+                    return;
                 }
-            }
-            return times;
-        }
 
-        // Busca no Google o que está ocupado
-        async function fetchSlots() {
-            const date = document.getElementById('date-input').value;
-            if (!date) return;
-
-            const grid = document.getElementById('slots-grid');
-            const loader = document.getElementById('loading-slots');
-            
-            grid.classList.add('hidden');
-            loader.classList.remove('hidden');
-            selectedTime = null;
-            updateSummary();
-
-            try {
-                const response = await fetch(`${API_URL}?action=getSlots&date=${date}`);
-                const data = await response.json();
-                
-                occupiedSlots = data.occupied || [];
-                renderGrid();
-            } catch (error) {
-                console.error("Erro de conexão:", error);
-                Toastify({ text: "Erro ao carregar agenda. Verifique se o Script está publicado como 'Qualquer Pessoa'.", style: { background: "#EF4444" } }).showToast();
-                occupiedSlots = []; 
-                renderGrid();
-            } finally {
-                loader.classList.add('hidden');
-                grid.classList.remove('hidden');
-            }
-        }
-
-        // Atualiza números do Dashboard
-        async function updateDashboardStats() {
-            try {
-                const response = await fetch(`${API_URL}?action=getStats`);
-                const data = await response.json();
-                document.getElementById('dash-total').innerText = data.total || "0";
+                list.innerHTML = data.bookings.map(b => `
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold">${b.time[0]}${b.time[1]}</div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">${b.user}</h4>
+                                <p class="text-sm text-gray-400">Sala de Reunião Individual</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-blue-600 bg-blue-50 px-4 py-1 rounded-full">${b.time}</span>
+                    </div>
+                `).join('');
             } catch (e) {
-                console.log("Erro ao carregar stats");
+                console.error("Erro ao carregar dashboard", e);
             }
         }
 
-        // Desenha os botões na tela
-        function renderGrid() {
-            const grid = document.getElementById('slots-grid');
-            const allTimes = generateTimeSlots();
+        // --- BOOKING LOGIC ---
+        function generateTimeSlots() {
+            const slots = [];
+            for (let hour = 8; hour <= 18; hour++) {
+                ["00", "15", "30", "45"].forEach(min => {
+                    slots.push(`${hour.toString().padStart(2, '0')}:${min}`);
+                });
+            }
+            return slots;
+        }
+
+        async function fetchOccupiedSlots() {
+            const date = document.getElementById('input-date').value;
+            const grid = document.getElementById('grid-slots');
+            grid.innerHTML = Array(12).fill('<div class="shimmer h-12 rounded-xl"></div>').join('');
             
-            grid.innerHTML = allTimes.map(time => {
-                const isTaken = occupiedSlots.includes(time);
+            try {
+                const data = await apiGet(`action=getSlots&date=${date}`);
+                occupiedTimes = data.occupied;
+                renderGrid();
+            } catch (e) {
+                toast("Erro ao conectar com servidor", "#EF4444");
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('grid-slots');
+            const allSlots = generateTimeSlots();
+            
+            grid.innerHTML = allSlots.map(time => {
+                const isOccupied = occupiedTimes.includes(time);
                 const isSelected = selectedTime === time;
                 
-                let btnClass = "py-2 px-1 rounded-lg text-sm font-semibold border transition-all duration-200 ";
-                
-                if (isTaken) {
-                    // Visual BLOQUEADO (Cinza/Riscado)
-                    btnClass += "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through";
-                } else if (isSelected) {
-                    // Visual SELECIONADO (Azulão)
-                    btnClass += "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105 ring-2 ring-blue-200";
-                } else {
-                    // Visual LIVRE (Branco)
-                    btnClass += "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer";
-                }
-
-                return `<button onclick="selectTime('${time}', ${isTaken})" class="${btnClass}" ${isTaken ? 'disabled' : ''}>${time}</button>`;
+                return `
+                    <button 
+                        ${isOccupied ? 'disabled' : ''} 
+                        onclick="selectTime('${time}')"
+                        class="p-3 rounded-xl border-2 font-bold text-sm transition-all
+                        ${isOccupied ? 'bg-gray-100 border-gray-100 text-gray-300 line-through cursor-not-allowed' : 
+                          isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 
+                          'bg-white border-gray-100 text-gray-600 hover:border-blue-300 hover:bg-blue-50'}">
+                        ${time}
+                    </button>
+                `;
             }).join('');
         }
 
-        // Quando clica num horário
-        function selectTime(time, isTaken) {
-            if (isTaken) return;
+        function selectTime(time) {
             selectedTime = time;
+            document.getElementById('btn-confirm').disabled = false;
             renderGrid();
-            updateSummary();
         }
 
-        function updateSummary() {
-            const summary = document.getElementById('selected-summary');
+        async function submitBooking() {
             const btn = document.getElementById('btn-confirm');
+            const date = document.getElementById('input-date').value;
             
-            if (selectedTime) {
-                summary.innerHTML = `Horário: <span class="text-blue-600 font-bold text-lg">${selectedTime}</span>`;
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
-                summary.innerText = "Nenhum horário selecionado";
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // Envia a reserva para a Planilha
-        async function confirmBooking() {
-            const date = document.getElementById('date-input').value;
-            const name = document.getElementById('user-name').value;
-            const email = document.getElementById('user-email').value;
-            const btn = document.getElementById('btn-confirm');
-
-            if (!name) {
-                Toastify({ text: "Por favor, digite seu nome.", style: { background: "#F59E0B" } }).showToast();
-                return;
-            }
-
-            // Trava o botão para não clicar 2 vezes
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reservando...';
             btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reservando...';
 
             try {
-                const payload = {
-                    date: date,
-                    time: selectedTime,
-                    name: name,
-                    email: email
-                };
-
-                // Truque para o Google Script aceitar o POST sem erro de CORS
-                const res = await fetch(API_URL, {
+                // Google Apps Script exige fetch com POST e body stringificado
+                await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
+                    mode: 'no-cors', // Necessário para evitar erro de redirecionamento CORS do Google
+                    body: JSON.stringify({ date, time: selectedTime })
                 });
 
-                const result = await res.json();
-
-                if (result.status === 'success') {
-                    Toastify({ 
-                        text: "Reserva Confirmada! 🎉", 
-                        duration: 3000,
-                        style: { background: "#10B981" } 
-                    }).showToast();
-                    
-                    selectedTime = null;
-                    document.getElementById('user-name').value = "";
-                    fetchSlots(); // Recarrega para bloquear o horário que você acabou de pegar
-                    updateDashboardStats();
-                } else {
-                    throw new Error(result.message || "Erro desconhecido");
-                }
-
-            } catch (error) {
-                Toastify({ 
-                    text: "Erro: " + error.message, 
-                    style: { background: "#EF4444" } 
-                }).showToast();
-            } finally {
-                btn.innerHTML = originalText;
-                if(!selectedTime) btn.disabled = true;
+                toast("Reserva realizada com sucesso!", "#10B981");
+                selectedTime = null;
+                setTimeout(() => {
+                    showSection('dash');
+                    loadDashboard();
+                }, 1500);
+            } catch (e) {
+                toast("Erro ao processar reserva", "#EF4444");
+                btn.disabled = false;
             }
         }
+
+        // --- UI UTILS ---
+        function showSection(sec) {
+            document.getElementById('sec-dash').classList.toggle('hidden', sec !== 'dash');
+            document.getElementById('sec-book').classList.toggle('hidden', sec !== 'book');
+            document.getElementById('nav-dash').classList.toggle('active-link', sec === 'dash');
+            document.getElementById('nav-book').classList.toggle('active-link', sec === 'book');
+        }
+
+        function toast(msg, color) {
+            Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "12px" } }).showToast();
+        }
+
+        // Init
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-date').value = today;
+            document.getElementById('input-date').min = today;
+            loadDashboard();
+        };
     </script>
 </body>
 </html>
