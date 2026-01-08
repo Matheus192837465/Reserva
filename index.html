@@ -3,285 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Booking Pro</title>
-    <!-- Tailwind CSS -->
+    <title>Sistema de Reservas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Toastify -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; color: #1F2937; }
+        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
         
+        /* Animação de Carregamento (Efeito Shimmer) */
         .shimmer {
-            background: linear-gradient(90deg, #eff1f3 25%, #e2e8f0 50%, #eff1f3 75%);
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        @keyframes shimmer { 
+            0% { background-position: -200% 0; } 
+            100% { background-position: 200% 0; } 
         }
-
-        .slot-pill { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-item.active { background-color: #EBF5FF; color: #3B82F6; border-right: 4px solid #3B82F6; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen">
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0 z-50">
-        <div class="p-6 flex items-center gap-3">
+    <aside class="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col z-50">
+        <div class="p-6 flex items-center gap-3 border-b border-gray-100">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-calendar-alt"></i>
             </div>
-            <span class="font-bold text-xl tracking-tight">ReserveIt</span>
+            <span class="font-bold text-xl tracking-tight text-gray-800">Reserva<span class="text-blue-600">Pro</span></span>
         </div>
-        <nav class="mt-4 px-3 space-y-1">
-            <a href="#" onclick="showSection('dashboard')" class="sidebar-item active flex items-center px-4 py-3 rounded-lg font-medium">
-                <i class="fas fa-chart-line w-6"></i> Dashboard
-            </a>
-            <a href="#" onclick="showSection('booking')" class="sidebar-item flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg font-medium">
-                <i class="fas fa-plus-circle w-6"></i> Nova Reserva
-            </a>
-            <a href="#" class="sidebar-item flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg font-medium">
-                <i class="fas fa-history w-6"></i> Minhas Reservas
-            </a>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium">
+                <i class="fas fa-chart-pie w-5"></i> Dashboard
+            </button>
+            <button onclick="switchTab('booking')" id="nav-booking" class="w-full flex items-center gap-3 px-4 py-3 text-blue-600 bg-blue-50 rounded-xl font-medium transition-colors">
+                <i class="fas fa-plus-circle w-5"></i> Nova Reserva
+            </button>
         </nav>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
         
-        <!-- SECTION: DASHBOARD -->
-        <section id="section-dashboard">
+        <div id="view-dashboard" class="hidden max-w-5xl mx-auto">
             <header class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Bem-vindo de volta!</h1>
-                <p class="text-gray-500">Aqui está o que está acontecendo hoje.</p>
+                <h1 class="text-2xl font-bold text-gray-800">Visão Geral</h1>
+                <p class="text-gray-500">Acompanhe a ocupação das salas hoje.</p>
             </header>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex items-center gap-4">
-                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i class="fas fa-bookmark"></i></div>
+                        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl"><i class="fas fa-calendar-check"></i></div>
                         <div>
-                            <p class="text-sm text-gray-500 font-medium uppercase">Reservas Hoje</p>
-                            <h3 class="text-2xl font-bold" id="stat-total">--</h3>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Reservas Totais</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="dash-total">--</h3>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex items-center gap-4">
-                        <div class="p-3 bg-green-50 text-green-600 rounded-xl"><i class="fas fa-clock"></i></div>
+                        <div class="p-3 bg-green-100 text-green-600 rounded-xl"><i class="fas fa-clock"></i></div>
                         <div>
-                            <p class="text-sm text-gray-500 font-medium uppercase">Minutos Usados</p>
-                            <h3 class="text-2xl font-bold">120min</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center gap-4">
-                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i class="fas fa-user-friends"></i></div>
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium uppercase">Próxima Reunião</p>
-                            <h3 class="text-2xl font-bold text-blue-600" id="stat-next">14:00</h3>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Status do Sistema</p>
+                            <h3 class="text-xl font-bold text-green-600">Online</h3>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <h2 class="text-lg font-semibold mb-4">Próximas Reservas</h2>
-            <div id="booking-list" class="space-y-4">
-                <!-- Skeleton Loader -->
-                <div class="shimmer h-24 w-full rounded-2xl"></div>
-                <div class="shimmer h-24 w-full rounded-2xl"></div>
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-center">
+                <h3 class="text-blue-800 font-bold text-lg mb-2">Precisa de uma sala?</h3>
+                <p class="text-blue-600 mb-4">Verifique a disponibilidade e reserve em segundos.</p>
+                <button onclick="switchTab('booking')" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Agendar Agora</button>
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION: BOOKING FLOW -->
-        <section id="section-booking" class="hidden max-w-2xl mx-auto">
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-                <div class="p-8 border-b border-gray-100">
-                    <h2 class="text-xl font-bold">Agendar Sala de Reunião</h2>
-                    <p class="text-gray-500">Selecione o melhor horário para você.</p>
+        <div id="view-booking" class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gray-50">
+                    <h2 class="text-xl font-bold text-gray-800">Agendar Horário</h2>
+                    <p class="text-sm text-gray-500">Selecione a data para ver os horários de 15 em 15 min.</p>
                 </div>
-                
-                <div class="p-8 space-y-8">
-                    <!-- Date Selection -->
+
+                <div class="p-6 space-y-6">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">1. Escolha a Data</label>
-                        <input type="date" id="booking-date" onchange="loadSlots()" 
-                            class="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 text-lg font-medium outline-none">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Data da Reunião</label>
+                        <input type="date" id="date-input" onchange="fetchSlots()" 
+                            class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
                     </div>
 
-                    <!-- Time Slots Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Seu Nome</label>
+                            <input type="text" id="user-name" placeholder="Ex: Matheus" 
+                                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Email (Opcional)</label>
+                            <input type="email" id="user-email" placeholder="nome@empresa.com" 
+                                class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">2. Horários Disponíveis</label>
-                        <div id="slots-container" class="grid grid-cols-3 md:grid-cols-4 gap-3">
-                            <!-- Slots will be injected here -->
-                            <div class="shimmer h-12 rounded-lg"></div>
-                            <div class="shimmer h-12 rounded-lg"></div>
-                            <div class="shimmer h-12 rounded-lg"></div>
-                            <div class="shimmer h-12 rounded-lg"></div>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Horários Disponíveis</label>
+                        
+                        <div id="loading-slots" class="hidden grid grid-cols-4 gap-3">
+                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
+                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
+                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
+                            <div class="h-10 bg-gray-200 rounded shimmer"></div>
+                        </div>
+
+                        <div id="slots-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                            <div class="col-span-full text-center text-gray-400 py-4">Selecione uma data acima para ver a agenda.</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-8 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <div id="selection-info" class="text-gray-600 font-medium">
-                        Nenhum horário selecionado
+                <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <div class="text-sm">
+                        <span id="selected-summary" class="font-bold text-gray-800">Nenhum horário selecionado</span>
                     </div>
-                    <button onclick="confirmBooking()" id="btn-confirm" disabled 
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        Confirmar Reserva
+                    <button id="btn-confirm" onclick="confirmBooking()" disabled
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        <span>Confirmar Reserva</span>
+                        <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
-        </section>
+        </div>
 
     </main>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwoPvQuLU7Ov1gFiFXyqIOkTwxO5WRej64oy5jRqq0sm-FQ2fmENCPRTSw4Hs766_dY/exec"; // Coloque o link do Web App do Google Apps Script
+        // ==========================================
+        // CONFIGURAÇÕES DO SISTEMA
+        // ==========================================
+        
+        // SEU LINK JA ESTA AQUI:
+        const API_URL = "https://script.google.com/macros/s/AKfycbwoPvQuLU7Ov1gFiFXyqIOkTwxO5WRej64oy5jRqq0sm-FQ2fmENCPRTSw4Hs766_dY/exec";
+        
+        const START_HOUR = 8; // Início: 08:00
+        const END_HOUR = 18;  // Fim: 18:00
+        const INTERVAL = 15;  // Intervalo de 15 minutos
+
         let selectedTime = null;
         let occupiedSlots = [];
 
-        // Inicialização
+        // Inicialização ao abrir a tela
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('booking-date').value = today;
-            document.getElementById('booking-date').min = today;
-            refreshDashboard();
+            const dateInput = document.getElementById('date-input');
+            dateInput.min = today; 
+            dateInput.value = today;
+            
+            // Já busca os dados do Google assim que abre
+            fetchSlots();
+            updateDashboardStats();
         });
 
-        function showSection(section) {
-            document.getElementById('section-dashboard').classList.toggle('hidden', section !== 'dashboard');
-            document.getElementById('section-booking').classList.toggle('hidden', section !== 'booking');
+        // Alternar entre Dashboard e Reserva
+        function switchTab(tab) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-booking').classList.add('hidden');
             
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            // Reseta cores do menu
+            document.getElementById('nav-dashboard').className = "w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium";
+            document.getElementById('nav-booking').className = "w-full flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium";
 
-            if(section === 'booking') loadSlots();
+            // Mostra a tela certa
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            
+            // Pinta o menu ativo de azul
+            const activeClass = "bg-blue-50 text-blue-600";
+            document.getElementById(`nav-${tab}`).classList.add(...activeClass.split(" "));
+            document.getElementById(`nav-${tab}`).classList.remove("text-gray-600");
         }
 
-        async function refreshDashboard() {
-            const listContainer = document.getElementById('booking-list');
-            
-            try {
-                // Mocking data for example if no API provided
-                const res = await fetch(`${API_URL}?action=getStats`).catch(() => null);
-                const data = res ? await res.json() : { 
-                    total: 3, 
-                    next: "15:30", 
-                    bookings: [
-                        {room: "Sala Alpha", time: "14:00 - 15:00", user: "João Silva"},
-                        {room: "Sala Beta", time: "16:00 - 17:00", user: "Time Marketing"}
-                    ] 
-                };
-
-                document.getElementById('stat-total').innerText = data.total;
-                document.getElementById('stat-next').innerText = data.next;
-
-                listContainer.innerHTML = data.bookings.map(b => `
-                    <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:border-blue-200 transition-colors">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                                <i class="fas fa-door-open"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800">${b.room}</h4>
-                                <p class="text-sm text-gray-500">${b.user}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">${b.time}</span>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error(e);
+        // Função Matemática: Cria horários de 15 em 15 min (Não é lista fixa!)
+        function generateTimeSlots() {
+            let times = [];
+            for (let h = START_HOUR; h < END_HOUR; h++) {
+                for (let m = 0; m < 60; m += INTERVAL) {
+                    let hourStr = h.toString().padStart(2, '0');
+                    let minStr = m.toString().padStart(2, '0');
+                    times.push(`${hourStr}:${minStr}`);
+                }
             }
+            return times;
         }
 
-        async function loadSlots() {
-            const date = document.getElementById('booking-date').value;
-            const container = document.getElementById('slots-container');
-            container.innerHTML = Array(8).fill('<div class="shimmer h-12 rounded-lg"></div>').join('');
+        // Busca no Google o que está ocupado
+        async function fetchSlots() {
+            const date = document.getElementById('date-input').value;
+            if (!date) return;
+
+            const grid = document.getElementById('slots-grid');
+            const loader = document.getElementById('loading-slots');
+            
+            grid.classList.add('hidden');
+            loader.classList.remove('hidden');
+            selectedTime = null;
+            updateSummary();
 
             try {
-                const res = await fetch(`${API_URL}?action=getSlots&date=${date}`);
-                const data = await res.json();
+                const response = await fetch(`${API_URL}?action=getSlots&date=${date}`);
+                const data = await response.json();
+                
                 occupiedSlots = data.occupied || [];
-                renderTimeGrid();
-            } catch (e) {
-                // Mock se API não disponível
-                occupiedSlots = ["10:00", "11:00"];
-                renderTimeGrid();
+                renderGrid();
+            } catch (error) {
+                console.error("Erro de conexão:", error);
+                Toastify({ text: "Erro ao carregar agenda. Verifique se o Script está publicado como 'Qualquer Pessoa'.", style: { background: "#EF4444" } }).showToast();
+                occupiedSlots = []; 
+                renderGrid();
+            } finally {
+                loader.classList.add('hidden');
+                grid.classList.remove('hidden');
             }
         }
 
-        function renderTimeGrid() {
-            const container = document.getElementById('slots-container');
-            const times = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+        // Atualiza números do Dashboard
+        async function updateDashboardStats() {
+            try {
+                const response = await fetch(`${API_URL}?action=getStats`);
+                const data = await response.json();
+                document.getElementById('dash-total').innerText = data.total || "0";
+            } catch (e) {
+                console.log("Erro ao carregar stats");
+            }
+        }
+
+        // Desenha os botões na tela
+        function renderGrid() {
+            const grid = document.getElementById('slots-grid');
+            const allTimes = generateTimeSlots();
             
-            container.innerHTML = times.map(time => {
-                const isOccupied = occupiedSlots.includes(time);
+            grid.innerHTML = allTimes.map(time => {
+                const isTaken = occupiedSlots.includes(time);
                 const isSelected = selectedTime === time;
                 
-                let classes = "slot-pill p-3 border rounded-xl text-center font-semibold ";
-                if(isOccupied) {
-                    classes += "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed line-through";
-                } else if(isSelected) {
-                    classes += "bg-blue-600 border-blue-600 text-white shadow-md";
+                let btnClass = "py-2 px-1 rounded-lg text-sm font-semibold border transition-all duration-200 ";
+                
+                if (isTaken) {
+                    // Visual BLOQUEADO (Cinza/Riscado)
+                    btnClass += "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through";
+                } else if (isSelected) {
+                    // Visual SELECIONADO (Azulão)
+                    btnClass += "bg-blue-600 text-white border-blue-600 shadow-md transform scale-105 ring-2 ring-blue-200";
                 } else {
-                    classes += "bg-white border-blue-200 text-blue-600 hover:bg-blue-50 cursor-pointer";
+                    // Visual LIVRE (Branco)
+                    btnClass += "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 cursor-pointer";
                 }
 
-                return `<button ${isOccupied ? 'disabled' : ''} onclick="selectSlot('${time}')" class="${classes}">${time}</button>`;
+                return `<button onclick="selectTime('${time}', ${isTaken})" class="${btnClass}" ${isTaken ? 'disabled' : ''}>${time}</button>`;
             }).join('');
         }
 
-        function selectSlot(time) {
+        // Quando clica num horário
+        function selectTime(time, isTaken) {
+            if (isTaken) return;
             selectedTime = time;
-            document.getElementById('selection-info').innerHTML = `Selecionado: <b class="text-blue-600">${time}</b>`;
-            document.getElementById('btn-confirm').disabled = false;
-            renderTimeGrid();
+            renderGrid();
+            updateSummary();
         }
 
-        async function confirmBooking() {
+        function updateSummary() {
+            const summary = document.getElementById('selected-summary');
             const btn = document.getElementById('btn-confirm');
-            const date = document.getElementById('booking-date').value;
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            if (selectedTime) {
+                summary.innerHTML = `Horário: <span class="text-blue-600 font-bold text-lg">${selectedTime}</span>`;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                summary.innerText = "Nenhum horário selecionado";
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Envia a reserva para a Planilha
+        async function confirmBooking() {
+            const date = document.getElementById('date-input').value;
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+            const btn = document.getElementById('btn-confirm');
+
+            if (!name) {
+                Toastify({ text: "Por favor, digite seu nome.", style: { background: "#F59E0B" } }).showToast();
+                return;
+            }
+
+            // Trava o botão para não clicar 2 vezes
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reservando...';
             btn.disabled = true;
 
             try {
-                const response = await fetch(API_URL, {
+                const payload = {
+                    date: date,
+                    time: selectedTime,
+                    name: name,
+                    email: email
+                };
+
+                // Truque para o Google Script aceitar o POST sem erro de CORS
+                const res = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Importante para o Google Apps Script
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, time: selectedTime })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
                 });
 
-                Toastify({
-                    text: "Reserva realizada com sucesso! 🎉",
-                    duration: 4000,
-                    gravity: "top",
-                    position: "right",
-                    style: { background: "#10B981", borderRadius: "12px" }
-                }).showToast();
+                const result = await res.json();
 
-                selectedTime = null;
-                showSection('dashboard');
-                refreshDashboard();
-            } catch (e) {
-                console.error(e);
+                if (result.status === 'success') {
+                    Toastify({ 
+                        text: "Reserva Confirmada! 🎉", 
+                        duration: 3000,
+                        style: { background: "#10B981" } 
+                    }).showToast();
+                    
+                    selectedTime = null;
+                    document.getElementById('user-name').value = "";
+                    fetchSlots(); // Recarrega para bloquear o horário que você acabou de pegar
+                    updateDashboardStats();
+                } else {
+                    throw new Error(result.message || "Erro desconhecido");
+                }
+
+            } catch (error) {
+                Toastify({ 
+                    text: "Erro: " + error.message, 
+                    style: { background: "#EF4444" } 
+                }).showToast();
             } finally {
-                btn.innerHTML = 'Confirmar Reserva';
+                btn.innerHTML = originalText;
+                if(!selectedTime) btn.disabled = true;
             }
         }
     </script>
