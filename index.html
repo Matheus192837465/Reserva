@@ -94,8 +94,20 @@
         let occupiedTimes = [];
 
         async function apiGet(params) {
-            const response = await fetch(`${API_URL}?${params}`);
-            return await response.json();
+            try {
+                // Adicionamos 'redirect: "follow"' para garantir que ele siga o 302 do Google
+                const response = await fetch(${API_URL}?${params}, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                return await response.json();
+            } catch (error) {
+                console.error("Erro na API:", error);
+                throw error;
+            }
         }
 
         // --- DASHBOARD LOGIC ---
@@ -140,18 +152,21 @@
         }
 
         async function fetchOccupiedSlots() {
-            const date = document.getElementById('input-date').value;
-            const grid = document.getElementById('grid-slots');
-            grid.innerHTML = Array(12).fill('<div class="shimmer h-12 rounded-xl"></div>').join('');
-            
-            try {
-                const data = await apiGet(`action=getSlots&date=${date}`);
-                occupiedTimes = data.occupied;
-                renderGrid();
-            } catch (e) {
-                toast("Erro ao conectar com servidor", "#EF4444");
-            }
+        const date = document.getElementById('input-date').value;
+        if(!date) return;
+    
+        const grid = document.getElementById('grid-slots');
+        grid.innerHTML = Array(8).fill('<div class="shimmer h-12 rounded-xl"></div>').join('');
+        
+        try {
+            const data = await apiGet(action=getSlots&date=${date});
+            occupiedTimes = data.occupied || [];
+            renderGrid();
+        } catch (e) {
+            toast("Erro ao carregar horários. Verifique o console.", "#EF4444");
+            grid.innerHTML = <p class="col-span-full text-center text-red-500 text-sm">Erro de conexão com o Google Script.</p>;
         }
+    }
 
         function renderGrid() {
             const grid = document.getElementById('grid-slots');
