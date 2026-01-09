@@ -117,7 +117,7 @@
                 ["00", "15", "30", "45"].forEach(m => morning.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
             // Tarde: 13:00 até 18:00
-            for (let h = 13; h < 18; h++) {
+            for (let h = 12; h < 18; h++) {
                 ["00", "15", "30", "45"].forEach(m => afternoon.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
             return { morning, afternoon };
