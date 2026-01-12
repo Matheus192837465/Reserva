@@ -3,439 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva</title>
+    <title>Reserva SalaSmart (Turbo)</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+        
+        /* Loader Inicial para não piscar a tela */
+        #app-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #F8FAFC; z-index: 50;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            transition: opacity 0.3s;
+        }
+
+        /* Efeitos visuais */
+        .slot-btn { transition: all 0.15s ease; }
+        .slot-btn:active { transform: scale(0.95); }
+        .slot-selected { 
+            background-color: #2563EB !important; /* Blue 600 */
+            color: white !important;
+            border-color: #2563EB !important;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* Animação suave de entrada */
+        .fade-enter { animation: fadein 0.3s forwards; }
+        @keyframes fadein { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <div id="app-loader">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-slate-500 font-semibold text-sm tracking-wide">CARREGANDO SISTEMA...</p>
+    </div>
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <aside class="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col z-40 sticky top-0 h-auto md:h-screen">
+            <div class="p-6 flex items-center gap-3 border-b border-slate-50">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-blue-200 shadow-lg">
+                    <i class="fas fa-layer-group text-lg"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight text-slate-800">Sala<span class="text-blue-600">Smart</span></span>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="switchTab('book')" id="tab-book" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-semibold bg-blue-50 text-blue-700">
+                    <i class="fas fa-plus-circle w-5"></i> Nova Reserva
+                </button>
+                <button onclick="switchTab('dash')" id="tab-dash" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800">
+                    <i class="fas fa-calendar-day w-5"></i> Ver Agenda
+                </button>
+            </nav>
+
+            <div class="p-6 text-xs text-slate-400 text-center border-t border-slate-50">
+                Sistema Interno v3.3
+            </div>
+        </aside>
+
+        <main class="flex-1 p-4 md:p-10 overflow-y-auto fade-enter">
+            
+            <section id="view-book" class="max-w-5xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    
+                    <div class="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">Agendar Horário</h2>
+                            <p class="text-slate-500 text-sm mt-1">Selecione data e horários disponíveis.</p>
+                        </div>
+                        <span class="hidden sm:inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold tracking-wide">ONLINE</span>
+                    </div>
+
+                    <div class="p-6 md:p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Data</label>
+                                <input type="date" id="date-picker" onchange="loadAvailability()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-semibold text-slate-700">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Seu Nome</label>
+                                <input type="text" id="user-name" placeholder="Ex: Comercial" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                                    <span>PIN (4 dígitos)</span>
+                                    <i class="fas fa-lock text-slate-300"></i>
+                                </label>
+                                <input type="password" id="user-pin" maxlength="4" placeholder="****" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition text-center font-bold tracking-[0.5em]">
+                            </div>
+                        </div>
+
+                        <div id="slots-container" class="min-h-[200px]">
+                            <div class="flex flex-col items-center justify-center h-48 text-slate-300">
+                                <i class="fas fa-calendar-alt text-4xl mb-4 opacity-50"></i>
+                                <p>Selecione uma data acima para carregar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 sticky bottom-0 z-20 backdrop-blur-md">
+                        <div id="selection-msg" class="text-slate-500 font-medium text-sm flex items-center gap-2">
+                            <i class="fas fa-info-circle"></i> Nenhum horário selecionado
+                        </div>
+                        <button id="btn-save" onclick="saveBooking()" disabled class="w-full sm:w-auto bg-slate-800 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all flex items-center justify-center gap-2">
+                            Confirmar Reserva
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-dash" class="hidden max-w-5xl mx-auto">
+                <header class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Agenda do Dia</h1>
+                        <p class="text-slate-500 mt-1 flex items-center gap-2">
+                            <i class="far fa-clock"></i> <span id="dash-date-display">--/--/----</span>
+                        </p>
+                    </div>
+                    <div class="bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ocupação</span>
+                        <span id="stats-total" class="text-2xl font-bold text-blue-600">0%</span>
+                    </div>
+                </header>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div id="booking-list" class="divide-y divide-slate-100">
+                        </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
-        
-        /* Ajustes finos do Sidebar */
-        .sidebar { min-height: 100vh; background: white; border-right: 1px solid #dee2e6; }
-        .nav-link { color: #6c757d; font-weight: 500; border-radius: 8px; margin-bottom: 5px; padding: 12px 15px; }
-        .nav-link:hover { background-color: #f8f9fa; color: #0d6efd; }
-        .nav-link.active { background-color: #0d6efd; color: white !important; font-weight: 700; box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2); }
-        .nav-link i { width: 25px; }
+    <script>
+        // --- 1. CONFIGURAÇÃO FIREBASE ---
+        // (Confirme se esta é a chave correta que você pegou no Console do Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaV9qldmuaTZToQ0KuRQojn1NoGhVDTOI",
+            authDomain: "reservasala-9a353.firebaseapp.com",
+            projectId: "reservasala-9a353",
+            storageBucket: "reservasala-9a353.firebasestorage.app",
+            messagingSenderId: "91889605408",
+            appId: "1:91889605408:web:e44a94274f6ceaac1c1545"
+        };
 
-        /* Botões de Slot */
-        .slot-btn { font-size: 0.85rem; font-weight: 600; padding: 8px 2px; }
-        .slot-selected { transform: scale(1.05); z-index: 10; }
+        // Inicializa
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
         
-        /* Cards */
-        .card { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-radius: 12px; }
-        .card-header { background: white; border-bottom: 1px solid #f1f1f1; padding: 1.5rem; border-radius: 12px 12px 0 0 !important; }
-        
-        /* Dashboard Items */
-        .booking-item { transition: background 0.2s; border-bottom: 1px solid #f1f1f1; }
-        .booking-item:last-child { border-bottom: none; }
-        .booking-item:hover { background-color: #f8f9fa; }
-    </style>
-</head>
-<body>
+        // Ativa Cache Local (Persistência) para ficar ultra-rápido
+        db.enablePersistence().catch(err => console.log("Cache info:", err.code));
 
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        
-        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 sidebar d-flex flex-col flex-column pt-4">
-            <div class="d-flex align-items-center pb-4 px-3 mb-md-0 me-md-auto text-decoration-none">
-                <i class="fas fa-calendar-check fs-2 text-primary me-2"></i>
-                <span class="fs-4 fw-bold text-dark">Reserva<span class="text-primary"></span></span>
-            </div>
+        let selectedSlots = [];
+        let occupiedSlots = [];
+
+        // --- 2. SISTEMA DE HORÁRIOS ---
+        function getPeriods() {
+            const morning = [];
+            const afternoon = [];
             
-            <ul class="nav flex-column px-2 mt-4 w-100">
-                <li class="nav-item">
-                    <a href="#" class="nav-link active" id="tab-book" onclick="switchTab('book')">
-                        <i class="fas fa-plus-circle"></i> <span class="d-none d-sm-inline">Nova Reserva</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" id="tab-dash" onclick="switchTab('dash')">
-                        <i class="fas fa-list-ul"></i> <span class="d-none d-sm-inline">Ver Agenda</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="col py-4 px-4 bg-light overflow-auto" style="height: 100vh;">
-            
-            <div id="view-book" class="container-fluid px-0" style="max-width: 900px;">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0 fw-bold text-dark">Agendar Sala</h4>
-                        <span class="badge bg-light text-secondary border">Multi-seleção Ativa</span>
-                    </div>
-                    <div class="card-body p-4">
-                        
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small">DATA</label>
-                                <input type="date" id="date-picker" onchange="loadAvailability()" class="form-control form-control-lg fw-bold">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small">SEU NOME</label>
-                                <input type="text" id="user-name" placeholder="Ex: Financeiro" class="form-control form-control-lg">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small">PIN (4 DÍGITOS)</label>
-                                <input type="password" id="user-pin" maxlength="4" placeholder="****" class="form-control form-control-lg text-center fw-bold letter-spacing-2">
-                                <div class="form-text text-end x-small">Para cancelar depois</div>
-                            </div>
-                        </div>
-
-                        <div id="slots-container" class="mb-5">
-                            <div class="text-center py-5 text-muted">
-                                <i class="fas fa-calendar-day fs-1 mb-3 text-secondary opacity-25"></i>
-                                <p>Selecione uma data acima para carregar os horários.</p>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="card-footer bg-white p-4 border-top d-flex justify-content-between align-items-center sticky-bottom">
-                        <span id="selection-msg" class="text-muted fw-bold small">Selecione horário(s)</span>
-                        <button id="btn-save" onclick="saveBooking()" disabled class="btn btn-success btn-lg px-5 fw-bold shadow-sm">
-                            Confirmar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-dash" class="d-none container-fluid px-0" style="max-width: 900px;">
-                <div class="d-flex justify-content-between align-items-end mb-4">
-                    <div>
-                        <h2 class="fw-bold text-dark mb-0">Agenda do Dia</h2>
-                        <p class="text-muted mb-0" id="dash-date-display">Carregando...</p>
-                    </div>
-                    <div class="card px-3 py-2 text-center border-0 shadow-sm">
-                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Ocupação</small>
-                        <div class="h4 mb-0 text-primary fw-bold" id="stats-total">0%</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div id="booking-list" class="list-group list-group-flush">
-                        </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    // --- CONFIGURAÇÃO FIREBASE (Mesma de antes) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyCaV9qldmuaTZToQ0KuRQojn1NoGhVDTOI",
-        authDomain: "reservasala-9a353.firebaseapp.com",
-        projectId: "reservasala-9a353",
-        storageBucket: "reservasala-9a353.firebasestorage.app",
-        messagingSenderId: "91889605408",
-        appId: "1:91889605408:web:e44a94274f6ceaac1c1545"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let selectedSlots = [];
-    let occupiedSlots = [];
-
-    // --- LOGICA DE HORÁRIOS ---
-    function getPeriods() {
-        const morning = [];
-        const afternoon = [];
-        // Manhã: 08:00 - 11:45
-        for (let h = 8; h < 12; h++) {
-            ["00", "15", "30", "45"].forEach(m => morning.push(`${h.toString().padStart(2,'0')}:${m}`));
-        }
-        // Tarde: 12:00 - 18:00
-        for (let h = 12; h < 18; h++) {
-            ["00", "15", "30", "45"].forEach(m => afternoon.push(`${h.toString().padStart(2,'0')}:${m}`));
-        }
-        return { morning, afternoon };
-    }
-
-    // --- LEITURA ---
-    async function loadAvailability() {
-        const date = document.getElementById('date-picker').value;
-        if(!date) return;
-
-        const container = document.getElementById('slots-container');
-        container.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border text-primary mb-2" role="status"></div><br>Buscando disponibilidade...</div>';
-        
-        selectedSlots = [];
-        updateSelectionUI();
-
-        try {
-            const snapshot = await db.collection("reservas").where("date", "==", date).get();
-            occupiedSlots = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const times = data.times || [data.time];
-                occupiedSlots.push(...times);
-            });
-            renderGrid();
-        } catch (error) {
-            console.error(error);
-            toast("Erro ao carregar dados.", "#dc3545");
-        }
-    }
-
-    function renderGrid() {
-        const container = document.getElementById('slots-container');
-        const { morning, afternoon } = getPeriods();
-        
-        const renderSection = (title, slots, icon) => `
-            <div class="mb-4">
-                <h6 class="text-secondary fw-bold text-uppercase mb-3"><i class="${icon} me-2"></i>${title}</h6>
-                <div class="row row-cols-3 row-cols-md-4 row-cols-lg-6 g-2">
-                    ${slots.map(time => {
-                        const isOccupied = occupiedSlots.includes(time);
-                        const isSelected = selectedSlots.includes(time);
-                        
-                        // Definição de Classes Bootstrap
-                        let btnClass = "btn w-100 slot-btn ";
-                        let disabledAttr = "";
-
-                        if (isOccupied) {
-                            btnClass += "btn-light text-muted border-0 text-decoration-line-through disabled";
-                            disabledAttr = "disabled";
-                        } else if (isSelected) {
-                            btnClass += "btn-primary shadow slot-selected";
-                        } else {
-                            btnClass += "btn-outline-secondary border-opacity-25 text-dark";
-                        }
-
-                        return `<div class="col">
-                                    <button onclick="toggleSlot('${time}')" class="${btnClass}" ${disabledAttr}>${time}</button>
-                                </div>`;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-
-        container.innerHTML = renderSection("Manhã", morning, "fas fa-coffee") + 
-                              "<hr class='text-muted opacity-25 my-4'>" + 
-                              renderSection("Tarde", afternoon, "fas fa-sun");
-    }
-
-    function toggleSlot(time) {
-        if (selectedSlots.includes(time)) {
-            selectedSlots = selectedSlots.filter(t => t !== time);
-        } else {
-            selectedSlots.push(time);
-        }
-        selectedSlots.sort();
-        renderGrid(); 
-        updateSelectionUI();
-    }
-
-    function updateSelectionUI() {
-        const btn = document.getElementById('btn-save');
-        const msg = document.getElementById('selection-msg');
-        
-        if (selectedSlots.length > 0) {
-            btn.disabled = false;
-            btn.innerHTML = `Reservar <span class="badge bg-white text-success ms-2">${selectedSlots.length}</span>`;
-            msg.innerHTML = `<span class="text-primary fw-bold">${selectedSlots.length} horários selecionados</span>`;
-        } else {
-            btn.disabled = true;
-            btn.innerText = "Confirmar";
-            msg.innerText = "Selecione horário(s)";
-        }
-    }
-
-    // --- SALVAR (WRITE) ---
-    async function saveBooking() {
-        const date = document.getElementById('date-picker').value;
-        const name = document.getElementById('user-name').value;
-        const pin = document.getElementById('user-pin').value;
-        const btn = document.getElementById('btn-save');
-
-        if(!name) return toast("Digite seu nome.", "#ffc107");
-        if(!pin || pin.length < 4) return toast("Defina um PIN de 4 dígitos.", "#ffc107");
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...';
-
-        try {
-            // Check Conflito
-            const snapshot = await db.collection("reservas").where("date", "==", date).get();
-            let serverOccupied = [];
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                serverOccupied.push(...(d.times || [d.time]));
-            });
-
-            if (selectedSlots.some(slot => serverOccupied.includes(slot))) {
-                toast("Um desses horários acabou de ser ocupado.", "#dc3545");
-                loadAvailability(); return;
+            // Manhã: 08:00 - 11:45
+            for (let h = 8; h < 12; h++) {
+                ["00", "15", "30", "45"].forEach(m => morning.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
+            // Tarde: 12:00 - 18:00 (Início ajustado para 12h)
+            for (let h = 12; h < 18; h++) {
+                ["00", "15", "30", "45"].forEach(m => afternoon.push(`${h.toString().padStart(2,'0')}:${m}`));
+            }
+            return { morning, afternoon };
+        }
 
-            await db.collection("reservas").add({
-                date: date,
-                times: selectedSlots,
-                startTime: selectedSlots[0],
-                user: name,
-                pin: pin,
-                createdAt: new Date().toISOString()
-            });
+        // --- 3. CARREGAR DISPONIBILIDADE ---
+        async function loadAvailability() {
+            const date = document.getElementById('date-picker').value;
+            if(!date) return;
 
-            toast("Reserva Realizada! Sucesso.", "#198754");
+            const container = document.getElementById('slots-container');
+            // Loader bonito dentro do container
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-blue-500 opacity-70">
+                    <i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i>
+                    <span class="text-sm font-semibold">Verificando agenda...</span>
+                </div>`;
+            
             selectedSlots = [];
-            document.getElementById('user-name').value = "";
-            document.getElementById('user-pin').value = "";
             updateSelectionUI();
-            loadAvailability();
 
-        } catch (error) {
-            toast("Erro: " + error.message, "#dc3545");
-        } finally {
-            if(selectedSlots.length === 0) btn.innerText = "Confirmar";
-        }
-    }
-
-    // --- DASHBOARD E EXCLUIR ---
-    async function deleteReservation(docId) {
-        const inputPin = prompt("Digite o PIN (4 dígitos) para CANCELAR esta reserva:");
-        if (!inputPin) return;
-
-        try {
-            const docRef = db.collection("reservas").doc(docId);
-            const doc = await docRef.get();
-            if (!doc.exists) return toast("Reserva não encontrada.", "#dc3545");
-
-            if (doc.data().pin === inputPin) {
-                await docRef.delete();
-                toast("Reserva cancelada.", "#198754");
-            } else {
-                toast("PIN Incorreto.", "#dc3545");
-            }
-        } catch (error) {
-            console.error(error);
-            toast("Erro ao cancelar.", "#dc3545");
-        }
-    }
-
-    // Lógica Inteligente de Formatação (Agrupa horários contínuos)
-    function formatSmartTime(times) {
-        if (!times || times.length === 0) return "";
-        times.sort();
-        const toMins = (t) => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
-        const toStr = (m) => {
-            let h = Math.floor(m / 60);
-            let min = m % 60;
-            return `${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
-        }
-
-        let groups = [];
-        let currentGroup = [times[0]];
-        for (let i = 1; i < times.length; i++) {
-            let prevMins = toMins(times[i-1]);
-            let currMins = toMins(times[i]);
-            if (currMins === prevMins + 15) currentGroup.push(times[i]);
-            else { groups.push(currentGroup); currentGroup = [times[i]]; }
-        }
-        groups.push(currentGroup);
-
-        return groups.map(g => {
-            let start = g[0];
-            let endMins = toMins(g[g.length-1]) + 15;
-            return `${start} às ${toStr(endMins)}`;
-        }).join(" <span class='badge bg-light text-secondary mx-1'>&</span> ");
-    }
-
-    function loadDashboard() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dash-date-display').innerText = "Visualizando: " + today.split('-').reverse().join('/');
-
-        db.collection("reservas").where("date", "==", today).onSnapshot((snapshot) => {
-            const list = document.getElementById('booking-list');
-            let bookings = [];
-            let totalBusy = 0;
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const times = data.times || [data.time];
-                totalBusy += times.length;
-                bookings.push({
-                    id: doc.id,
-                    user: data.user,
-                    timeDisplay: formatSmartTime(times),
-                    rawTime: times[0]
+            try {
+                // Busca no banco (ou cache)
+                const snapshot = await db.collection("reservas").where("date", "==", date).get();
+                occupiedSlots = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const times = data.times || [data.time];
+                    occupiedSlots.push(...times);
                 });
-            });
-
-            bookings.sort((a,b) => a.rawTime.localeCompare(b.rawTime));
-            
-            const percent = Math.round((totalBusy / 40) * 100);
-            document.getElementById('stats-total').innerText = percent + "%";
-
-            if (bookings.length === 0) {
-                list.innerHTML = '<div class="text-center p-5 text-muted"><i class="fas fa-mug-hot fs-1 mb-3"></i><br>Nenhuma reserva hoje.<br>A sala está livre!</div>';
-                return;
+                renderGrid();
+            } catch (error) {
+                console.error(error);
+                toast("Erro ao conectar no banco.", "#EF4444");
             }
+        }
 
-            list.innerHTML = bookings.map(b => `
-                <div class="booking-item p-3 d-flex flex-column flex-sm-row justify-content-between align-items-center">
-                    <div class="d-flex align-items-center w-100 mb-2 mb-sm-0">
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
-                            <i class="fas fa-user fw-bold"></i>
-                        </div>
-                        <div>
-                            <div class="fw-bold text-dark">${b.user}</div>
-                            <small class="text-success"><i class="fas fa-check-circle"></i> Confirmado</small>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex align-items-center justify-content-between w-100 w-sm-auto">
-                        <span class="badge bg-light text-primary border px-3 py-2 fs-6 fw-normal font-monospace me-3">
-                            ${b.timeDisplay}
-                        </span>
-                        <button onclick="deleteReservation('${b.id}')" class="btn btn-outline-danger btn-sm border-0" title="Cancelar">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+        function renderGrid() {
+            const container = document.getElementById('slots-container');
+            const { morning, afternoon } = getPeriods();
+            
+            // Função auxiliar para criar cada bloco de período
+            const renderSection = (title, slots, icon) => `
+                <div class="mb-8 animate-fade-in">
+                    <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2 uppercase text-xs tracking-wider">
+                        <i class="${icon} text-slate-400"></i> ${title}
+                    </h3>
+                    <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                        ${slots.map(time => {
+                            const isOccupied = occupiedSlots.includes(time);
+                            const isSelected = selectedSlots.includes(time);
+                            
+                            let css = "slot-btn py-2 px-1 rounded-lg text-sm font-bold border ";
+                            
+                            if (isOccupied) {
+                                css += "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed decoration-slice line-through";
+                            } else if (isSelected) {
+                                // Classe definida no CSS .slot-selected
+                                css += "slot-selected";
+                            } else {
+                                css += "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 cursor-pointer hover:shadow-sm";
+                            }
+
+                            return `<button ${isOccupied ? 'disabled' : ''} onclick="toggleSlot('${time}')" class="${css}">${time}</button>`;
+                        }).join('')}
                     </div>
                 </div>
-            `).join('');
-        });
-    }
+            `;
 
-    // --- NAVEGAÇÃO ---
-    function switchTab(tab) {
-        document.getElementById('view-book').classList.toggle('d-none', tab !== 'book');
-        document.getElementById('view-dash').classList.toggle('d-none', tab !== 'dash');
-        
-        // Atualiza Sidebar Active State
-        document.getElementById('tab-book').classList.toggle('active', tab === 'book');
-        document.getElementById('tab-dash').classList.toggle('active', tab === 'dash');
-
-        if(tab === 'book') {
-            if(!document.getElementById('date-picker').value) {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('date-picker').value = today;
-                loadAvailability();
-            }
-        } else {
-            loadDashboard();
+            container.innerHTML = 
+                renderSection("Manhã", morning, "fas fa-coffee") + 
+                "<div class='border-t border-slate-100 my-6'></div>" + 
+                renderSection("Tarde", afternoon, "fas fa-sun");
         }
-    }
 
-    function toast(msg, color) {
-        Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "8px" }, gravity: "top" }).showToast();
-    }
+        function toggleSlot(time) {
+            if (selectedSlots.includes(time)) {
+                selectedSlots = selectedSlots.filter(t => t !== time);
+            } else {
+                selectedSlots.push(time);
+            }
+            selectedSlots.sort();
+            renderGrid(); 
+            updateSelectionUI();
+        }
 
-    window.onload = () => { switchTab('book'); };
-</script>
+        function updateSelectionUI() {
+            const btn = document.getElementById('btn-save');
+            const msg = document.getElementById('selection-msg');
+            
+            if (selectedSlots.length > 0) {
+                btn.disabled = false;
+                btn.classList.remove('bg-slate-800');
+                btn.classList.add('bg-blue-600'); // Muda cor para azul quando ativo
+                btn.innerHTML = `Confirmar <span class="bg-white/20 px-2 py-0.5 rounded text-xs ml-2">${selectedSlots.length}</span>`;
+                msg.innerHTML = `<span class="text-blue-600 font-bold">${selectedSlots.length} horários selecionados</span>`;
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-slate-800');
+                btn.classList.remove('bg-blue-600');
+                btn.innerText = "Confirmar Reserva";
+                msg.innerHTML = '<i class="fas fa-info-circle"></i> Nenhum horário selecionado';
+            }
+        }
 
-</body>
-</html>
+        // --- 4. SALVAR NO FIREBASE ---
+        async function saveBooking() {
+            const date = document.getElementById('date-picker').value;
+            const name = document.getElementById('user-name').value;
+            const pin = document.getElementById('user-pin').value;
+            const btn = document.getElementById('btn-save');
 
+            if(!name) return toast("Digite seu nome.", "#F59E0B");
+            if(!pin || pin.length < 4) return toast("O PIN precisa ter 4 dígitos.", "#F59E0B");
 
+            // Estado de Loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvando...';
+
+            try {
+                // Checagem de colisão no servidor
+                const snapshot = await db.collection("reservas").where("date", "==", date).get();
+                let serverOccupied = [];
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    serverOccupied.push(...(d.times || [d.time]));
+                });
+
+                if (selectedSlots.some(slot => serverOccupied.includes(slot))) {
+                    toast("Ops! Alguém acabou de reservar esse horário.", "#EF4444");
+                    loadAvailability(); return;
+                }
+
+                // Salva
+                await db.collection("reservas").add({
+                    date: date,
+                    times: selectedSlots,
+                    startTime: selectedSlots[0],
+                    user: name,
+                    pin: pin,
+                    createdAt: new Date().toISOString()
+                });
+
+                toast("Reserva Confirmada! ✅", "#10B981");
+                
+                // Limpa form
+                selectedSlots = [];
+                document.getElementById('user-name').value = "";
+                document.getElementById('user-pin').value = "";
+                updateSelectionUI();
+                loadAvailability();
+
+            } catch (error) {
+                toast("Erro: " + error.message, "#EF4444");
+            } finally {
+                if(selectedSlots.length === 0) {
+                    btn.innerHTML = "Confirmar Reserva";
+                }
+            }
+        }
+
+        // --- 5. DASHBOARD & CANCELAMENTO ---
+        async function deleteReservation(docId) {
+            const inputPin = prompt("Digite o PIN (4 dígitos) para cancelar:");
+            if (!inputPin) return;
+
+            try {
+                const docRef = db.collection("reservas").doc(docId);
+                const doc = await docRef.get();
+                
+                if (!doc.exists) return toast("Não encontrado.", "#EF4444");
+
+                if (doc.data().pin === inputPin) {
+                    await docRef.delete();
+                    toast("Reserva Cancelada.", "#10B981");
+                } else {
+                    toast("PIN Incorreto.", "#EF4444");
+                }
+            } catch (error) {
+                console.error(error);
+                toast("Erro ao cancelar.", "#EF4444");
+            }
+        }
+
+        // Lógica "Inteligente" para agrupar horários (ex: 09:00 - 10:00)
+        function formatSmartTime(times) {
+            if (!times || times.length === 0) return "";
+            times.sort();
+            const toMins = (t) => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
+            const toStr = (m) => {
+                let h = Math.floor(m / 60);
+                let min = m % 60;
+                return `${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+            }
+
+            let groups = [];
+            let currentGroup = [times[0]];
+            for (let i = 1; i < times.length; i++) {
+                let prevMins = toMins(times[i-1]);
+                let currMins = toMins(times[i]);
+                if (currMins === prevMins + 15) currentGroup.push(times[i]);
+                else { groups.push(currentGroup); currentGroup = [times[i]]; }
+            }
+            groups.push(currentGroup);
+
+            return groups.map(g => {
+                let start = g[0];
+                let endMins = toMins(g[g.length-1]) + 15;
+                return `${start} às ${toStr(endMins)}`;
+            }).join(" <span class='text-slate-300 mx-1'>|</span> ");
+        }
+
+        function loadDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dash-date-display').innerText = today.split('-').reverse().join('/');
+
+            db.collection("reservas").where("date", "==", today).onSnapshot((snapshot) => {
+                const list = document.getElementById('booking-list');
+                let bookings = [];
+                let totalBusy = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const times = data.times || [data
