@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservas</title>
+    <title>Reserva Inteligente</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,7 +16,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
-        /* Animação suave na seleção */
         .slot-btn { transition: all 0.2s; }
         .slot-btn:active { transform: scale(0.95); }
     </style>
@@ -25,8 +24,8 @@
 
     <nav class="w-full md:w-64 bg-white border-r border-gray-200 p-6 flex flex-col shadow-sm">
         <div class="flex items-center gap-3 mb-8 text-slate-800">
-            <i class="fas fa-clock text-2xl text-blue-600"></i>
-            <span class="text-xl font-bold tracking-tight">Reserva<span class="text-blue-600"></span></span>
+            <i class="fas fa-calendar-alt text-2xl text-blue-600"></i>
+            <span class="text-xl font-bold tracking-tight">Sala<span class="text-blue-600">Smart</span></span>
         </div>
         <div class="space-y-2">
             <button onclick="switchTab('book')" id="tab-book" class="w-full text-left px-4 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700 transition"><i class="fas fa-plus mr-2"></i> Nova Reserva</button>
@@ -34,32 +33,37 @@
         </div>
     </nav>
 
-    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto relative">
 
         <div id="view-book" class="max-w-4xl mx-auto">
             <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-slate-800">Agendar Sala</h2>
-                    <span class="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold">Multi-seleção Ativada</span>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div>
                         <label class="block font-bold text-sm text-slate-600 mb-2">Data</label>
                         <input type="date" id="date-picker" onchange="loadAvailability()" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 font-semibold text-slate-700">
                     </div>
                     <div>
                         <label class="block font-bold text-sm text-slate-600 mb-2">Seu Nome</label>
-                        <input type="text" id="user-name" placeholder="Ex: Equipe de Vendas" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        <input type="text" id="user-name" placeholder="Ex: Time Financeiro" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-sm text-slate-600 mb-2">
+                            PIN <span class="text-xs font-normal text-gray-400">(Para cancelar depois)</span>
+                        </label>
+                        <input type="password" id="user-pin" maxlength="4" placeholder="1234" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 tracking-widest text-center font-bold">
                     </div>
                 </div>
 
                 <div id="slots-container" class="mb-8">
-                    <div class="text-center py-8 text-gray-400">Selecione uma data para carregar os horários...</div>
+                    <div class="text-center py-8 text-gray-400">Selecione uma data para carregar...</div>
                 </div>
 
                 <div class="flex justify-between items-center border-t pt-6 sticky bottom-0 bg-white">
-                    <div id="selection-msg" class="text-sm font-semibold text-slate-400">Selecione um ou mais horários</div>
+                    <div id="selection-msg" class="text-sm font-semibold text-slate-400">Selecione horário(s)</div>
                     <button id="btn-save" onclick="saveBooking()" disabled class="bg-green-600 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-all shadow-lg shadow-green-200">
                         Confirmar
                     </button>
@@ -88,7 +92,7 @@
     </main>
 
     <script>
-        // --- CONFIGURAÇÃO ---
+        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyCaV9qldmuaTZToQ0KuRQojn1NoGhVDTOI",
             authDomain: "reservasala-9a353.firebaseapp.com",
@@ -101,59 +105,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Variáveis
-        let selectedSlots = []; // Agora é um ARRAY (vários horários)
-        let occupiedSlots = []; // Horários já ocupados no banco
+        let selectedSlots = [];
+        let occupiedSlots = [];
 
-        // --- LÓGICA DE HORÁRIOS ---
-        
-        // Gera horários separando Manhã e Tarde
+        // --- GERAÇÃO DE HORÁRIOS ---
         function getPeriods() {
             const morning = [];
             const afternoon = [];
-            
-            // Manhã: 08:00 até 11:45
+            // Manhã: 08:00 - 11:45
             for (let h = 8; h < 12; h++) {
                 ["00", "15", "30", "45"].forEach(m => morning.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
-            // Tarde: 12:00 até 19:00
-            for (let h = 12; h < 19; h++) {
+            // Tarde: 12:00 - 18:00
+            for (let h = 12; h < 18; h++) {
                 ["00", "15", "30", "45"].forEach(m => afternoon.push(`${h.toString().padStart(2,'0')}:${m}`));
             }
             return { morning, afternoon };
         }
 
-        // --- LEITURA (READ) ---
+        // --- READ ---
         async function loadAvailability() {
             const date = document.getElementById('date-picker').value;
             if(!date) return;
 
             const container = document.getElementById('slots-container');
-            container.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Consultando disponibilidade...</div>';
+            container.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Consultando...</div>';
             
-            // Limpa seleção anterior ao trocar data
             selectedSlots = [];
             updateSelectionUI();
 
             try {
                 const snapshot = await db.collection("reservas").where("date", "==", date).get();
                 occupiedSlots = [];
-                
-                // Agora cada documento pode ter UM ARRAY de horários ("times") ou um horário único ("time")
-                // Vamos suportar os dois para não quebrar o que você já salvou antes
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.times && Array.isArray(data.times)) {
-                        occupiedSlots.push(...data.times); // Adiciona todos os horários do array
-                    } else if (data.time) {
-                        occupiedSlots.push(data.time); // Suporte legado (versão antiga)
-                    }
+                    const times = data.times || [data.time];
+                    occupiedSlots.push(...times);
                 });
-                
                 renderGrid();
             } catch (error) {
                 console.error(error);
-                toast("Erro ao carregar. Verifique o console.", "#EF4444");
+                toast("Erro ao carregar.", "#EF4444");
             }
         }
 
@@ -170,15 +162,11 @@
                         ${slots.map(time => {
                             const isOccupied = occupiedSlots.includes(time);
                             const isSelected = selectedSlots.includes(time);
-                            
                             let css = "slot-btn py-2 px-1 rounded text-sm font-bold border ";
-                            if (isOccupied) {
-                                css += "bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed line-through";
-                            } else if (isSelected) {
-                                css += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-200 transform scale-105";
-                            } else {
-                                css += "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 cursor-pointer";
-                            }
+                            
+                            if (isOccupied) css += "bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed line-through";
+                            else if (isSelected) css += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-200 transform scale-105";
+                            else css += "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 cursor-pointer";
 
                             return `<button ${isOccupied ? 'disabled' : ''} onclick="toggleSlot('${time}')" class="${css}">${time}</button>`;
                         }).join('')}
@@ -186,194 +174,233 @@
                 </div>
             `;
 
-            container.innerHTML = 
-                renderSection("Manhã (08h - 12h)", morning, "fas fa-coffee") +
-                "<hr class='border-gray-100 my-4'>" +
-                renderSection("Tarde (12h - 19h)", afternoon, "fas fa-sun");
+            container.innerHTML = renderSection("Manhã", morning, "fas fa-coffee") + 
+                                  "<hr class='border-gray-100 my-4'>" + 
+                                  renderSection("Tarde", afternoon, "fas fa-sun");
         }
 
-        // --- INTERAÇÃO ---
         function toggleSlot(time) {
-            // Se já está selecionado, remove. Se não, adiciona.
-            if (selectedSlots.includes(time)) {
-                selectedSlots = selectedSlots.filter(t => t !== time);
-            } else {
-                selectedSlots.push(time);
-            }
-            
-            // Ordena os horários para ficar bonito
+            if (selectedSlots.includes(time)) selectedSlots = selectedSlots.filter(t => t !== time);
+            else selectedSlots.push(time);
             selectedSlots.sort();
-            
-            renderGrid(); // Atualiza cores
+            renderGrid(); 
             updateSelectionUI();
         }
 
         function updateSelectionUI() {
-            const msg = document.getElementById('selection-msg');
             const btn = document.getElementById('btn-save');
-            
-            if (selectedSlots.length === 0) {
-                msg.innerText = "Nenhum horário selecionado";
-                btn.disabled = true;
-                btn.innerText = "Confirmar";
-            } else {
-                msg.innerHTML = `${selectedSlots.length} horários: <strong class="text-blue-600">${selectedSlots[0]}...</strong>`;
+            const msg = document.getElementById('selection-msg');
+            if (selectedSlots.length > 0) {
                 btn.disabled = false;
                 btn.innerText = `Reservar (${selectedSlots.length})`;
+                msg.innerHTML = `${selectedSlots.length} selecionados`;
+            } else {
+                btn.disabled = true;
+                btn.innerText = "Confirmar";
+                msg.innerText = "Selecione horário(s)";
             }
         }
 
-        // --- GRAVAÇÃO (WRITE) ---
+        // --- WRITE ---
         async function saveBooking() {
             const date = document.getElementById('date-picker').value;
             const name = document.getElementById('user-name').value;
+            const pin = document.getElementById('user-pin').value;
             const btn = document.getElementById('btn-save');
 
-            if(!name) { toast("Digite um nome para a reserva!", "#F59E0B"); return; }
+            if(!name) return toast("Digite seu nome.", "#F59E0B");
+            if(!pin || pin.length < 4) return toast("Crie um PIN de 4 dígitos.", "#F59E0B");
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
 
             try {
-                // Verificação final de colisão (para não sobrescrever ninguém)
+                // Check colisão
                 const snapshot = await db.collection("reservas").where("date", "==", date).get();
                 let serverOccupied = [];
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    if(d.times) serverOccupied.push(...d.times);
-                    else if(d.time) serverOccupied.push(d.time);
+                    serverOccupied.push(...(d.times || [d.time]));
                 });
 
-                // Verifica se algum dos meus selecionados já está na lista do servidor
-                const collision = selectedSlots.some(slot => serverOccupied.includes(slot));
-                
-                if (collision) {
-                    toast("Ops! Alguém acabou de reservar um desses horários.", "#EF4444");
-                    loadAvailability(); // Recarrega para mostrar o que foi pego
-                    return;
+                if (selectedSlots.some(slot => serverOccupied.includes(slot))) {
+                    toast("Horário acabou de ser ocupado!", "#EF4444");
+                    loadAvailability(); return;
                 }
 
-                // Salva TUDO em um único documento (muito mais limpo pro banco)
                 await db.collection("reservas").add({
                     date: date,
-                    times: selectedSlots, // Array com todos os horários selecionados
-                    startTime: selectedSlots[0], // Apenas para facilitar ordenação
+                    times: selectedSlots,
+                    startTime: selectedSlots[0],
                     user: name,
+                    pin: pin,
                     createdAt: new Date().toISOString()
                 });
 
-                toast("Reserva realizada com sucesso! ✅", "#10B981");
-                
-                // Limpeza
+                toast("Reserva Confirmada! ✅", "#10B981");
                 selectedSlots = [];
                 document.getElementById('user-name').value = "";
+                document.getElementById('user-pin').value = "";
                 updateSelectionUI();
-                loadAvailability(); // Atualiza visualmente
+                loadAvailability();
                 
             } catch (error) {
-                toast("Erro ao salvar: " + error.message, "#EF4444");
+                toast("Erro: " + error.message, "#EF4444");
             } finally {
                 btn.innerHTML = "Confirmar";
             }
         }
 
-        // --- DASHBOARD INTELIGENTE ---
+        // --- DELETE ---
+        async function deleteReservation(docId) {
+            const inputPin = prompt("Digite o PIN para cancelar:");
+            if (!inputPin) return;
+
+            try {
+                const docRef = db.collection("reservas").doc(docId);
+                const doc = await docRef.get();
+                if (!doc.exists) return toast("Não encontrado.", "#EF4444");
+
+                if (doc.data().pin === inputPin) {
+                    await docRef.delete();
+                    toast("Reserva cancelada!", "#10B981");
+                } else {
+                    toast("Senha incorreta.", "#EF4444");
+                }
+            } catch (error) {
+                console.error(error);
+                toast("Erro ao cancelar.", "#EF4444");
+            }
+        }
+
+        // --- LÓGICA INTELIGENTE DE EXIBIÇÃO ---
+        function formatSmartTime(times) {
+            if (!times || times.length === 0) return "";
+            times.sort();
+
+            // Converte hora "HH:MM" para minutos (ex: 09:00 -> 540)
+            const toMins = (t) => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
+            // Converte minutos para "HH:MM"
+            const toStr = (m) => {
+                let h = Math.floor(m / 60);
+                let min = m % 60;
+                return `${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}`;
+            }
+
+            let groups = [];
+            let currentGroup = [times[0]];
+
+            // Agrupa horários consecutivos (intervalo de 15 min)
+            for (let i = 1; i < times.length; i++) {
+                let prevMins = toMins(times[i-1]);
+                let currMins = toMins(times[i]);
+
+                if (currMins === prevMins + 15) {
+                    currentGroup.push(times[i]);
+                } else {
+                    groups.push(currentGroup);
+                    currentGroup = [times[i]];
+                }
+            }
+            groups.push(currentGroup);
+
+            // Formata cada grupo (Início até Fim + 15min)
+            return groups.map(g => {
+                let start = g[0];
+                let lastSlotStart = g[g.length-1];
+                let endMins = toMins(lastSlotStart) + 15; // Adiciona 15 min ao último slot para mostrar hora de fim real
+                return `${start} às ${toStr(endMins)}`;
+            }).join(" <span class='text-gray-400 font-normal'>e</span> ");
+        }
+
         function loadDashboard() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dash-date-display').innerText = "Visualizando: " + today.split('-').reverse().join('/');
 
-            db.collection("reservas")
-                .where("date", "==", today)
+            db.collection("reservas").where("date", "==", today)
                 .onSnapshot((snapshot) => {
                     const list = document.getElementById('booking-list');
                     let bookings = [];
-                    let totalSlotsBusy = 0;
+                    let totalBusy = 0;
 
                     snapshot.forEach(doc => {
                         const data = doc.data();
+                        const times = data.times || [data.time];
+                        totalBusy += times.length;
                         
-                        // Normaliza os dados (converte array ou string única)
-                        let timesArr = data.times ? data.times : [data.time];
-                        timesArr.sort();
-                        
-                        // Calcula "Das X até Y"
-                        let start = timesArr[0];
-                        let end = timesArr[timesArr.length - 1];
-                        // Adiciona 15 min ao último horário para mostrar hora de fim real (opcional, visual)
-                        // Deixei simples mostrando o slot final ocupado
-                        
-                        totalSlotsBusy += timesArr.length;
-
                         bookings.push({
+                            id: doc.id,
                             user: data.user,
-                            timeDisplay: timesArr.length > 1 ? `${start} às ${end}` : start,
-                            duration: timesArr.length * 15 + " min",
-                            rawTime: start // para ordenar
+                            // AQUI ESTÁ A MÁGICA: Usa a função inteligente
+                            timeDisplay: formatSmartTime(times),
+                            rawTime: times[0]
                         });
                     });
 
-                    // Ordena por horário de início
                     bookings.sort((a,b) => a.rawTime.localeCompare(b.rawTime));
-
-                    // Atualiza Stats
-                    const totalSlotsDay = 36; // (4h manhã + 5h tarde) * 4 slots
-                    const percent = Math.round((totalSlotsBusy / totalSlotsDay) * 100);
+                    
+                    const percent = Math.round((totalBusy / 40) * 100);
                     document.getElementById('stats-total').innerText = percent + "%";
 
                     if (bookings.length === 0) {
-                        list.innerHTML = '<div class="p-10 text-center text-gray-400">Nenhuma reserva para hoje.<br>A sala está livre!</div>';
+                        list.innerHTML = '<div class="p-10 text-center text-gray-400">Nenhuma reserva para hoje.</div>';
                         return;
                     }
 
                     list.innerHTML = bookings.map(b => `
-                        <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center hover:bg-slate-50 transition gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        <div class="p-4 flex flex-col sm:flex-row justify-between items-center hover:bg-slate-50 transition gap-3 group border-b border-slate-50 last:border-0">
+                            <div class="flex items-center gap-3 w-full">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold flex-shrink-0">
                                     <i class="fas fa-user"></i>
                                 </div>
-                                <div>
+                                <div class="flex-1">
                                     <div class="font-bold text-slate-700">${b.user}</div>
-                                    <div class="text-xs text-slate-400 flex items-center gap-1">
-                                        <i class="fas fa-hourglass-half"></i> ${b.duration}
-                                    </div>
+                                    <div class="text-xs text-slate-400">Reserva Confirmada</div>
                                 </div>
                             </div>
-                            <div class="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded text-sm w-full sm:w-auto text-center">
-                                ${b.timeDisplay}
+                            
+                            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                                <div class="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded text-sm whitespace-nowrap">
+                                    ${b.timeDisplay}
+                                </div>
+                                
+                                <button onclick="deleteReservation('${b.id}')" class="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded transition" title="Cancelar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </div>
                         </div>
                     `).join('');
                 });
         }
 
-        // Navegação
         function switchTab(tab) {
             document.getElementById('view-book').classList.toggle('hidden', tab !== 'book');
             document.getElementById('view-dash').classList.toggle('hidden', tab !== 'dash');
             
-            const activeClass = "bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700";
-            const inactiveClass = "hover:bg-gray-50 text-gray-600 font-medium";
+            const active = "bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700";
+            const inactive = "hover:bg-gray-50 text-gray-600 font-medium";
 
             if(tab === 'book') {
-                document.getElementById('tab-book').className = `w-full text-left px-4 py-3 rounded-lg transition ${activeClass}`;
-                document.getElementById('tab-dash').className = `w-full text-left px-4 py-3 rounded-lg transition ${inactiveClass}`;
+                document.getElementById('tab-book').className = `w-full text-left px-4 py-3 rounded-lg transition ${active}`;
+                document.getElementById('tab-dash').className = `w-full text-left px-4 py-3 rounded-lg transition ${inactive}`;
                 if(!document.getElementById('date-picker').value) {
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('date-picker').value = today;
                     loadAvailability();
                 }
             } else {
-                document.getElementById('tab-dash').className = `w-full text-left px-4 py-3 rounded-lg transition ${activeClass}`;
-                document.getElementById('tab-book').className = `w-full text-left px-4 py-3 rounded-lg transition ${inactiveClass}`;
+                document.getElementById('tab-dash').className = `w-full text-left px-4 py-3 rounded-lg transition ${active}`;
+                document.getElementById('tab-book').className = `w-full text-left px-4 py-3 rounded-lg transition ${inactive}`;
                 loadDashboard();
             }
         }
 
         function toast(msg, color) {
-            Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "8px" }, gravity: "top", position: "center" }).showToast();
+            Toastify({ text: msg, duration: 3000, style: { background: color, borderRadius: "8px" }, gravity: "top" }).showToast();
         }
 
         window.onload = () => { switchTab('book'); };
     </script>
 </body>
 </html>
+
